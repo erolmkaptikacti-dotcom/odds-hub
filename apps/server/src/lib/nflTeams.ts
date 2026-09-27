@@ -10,6 +10,7 @@ export interface NflTeam {
   mascot: string;
   abbr: string;
   name: string; // "Kansas City Chiefs"
+  aliases?: string[]; // extra labels a source might use, e.g. Kalshi's truncated "Los Angeles C"
 }
 
 export const NFL_TEAMS: NflTeam[] = [
@@ -29,8 +30,8 @@ export const NFL_TEAMS: NflTeam[] = [
   { city: "Indianapolis", mascot: "Colts", abbr: "IND", name: "Indianapolis Colts" },
   { city: "Jacksonville", mascot: "Jaguars", abbr: "JAX", name: "Jacksonville Jaguars" },
   { city: "Kansas City", mascot: "Chiefs", abbr: "KC", name: "Kansas City Chiefs" },
-  { city: "Los Angeles", mascot: "Chargers", abbr: "LAC", name: "LA Chargers" },
-  { city: "Los Angeles", mascot: "Rams", abbr: "LAR", name: "LA Rams" },
+  { city: "Los Angeles", mascot: "Chargers", abbr: "LAC", name: "LA Chargers", aliases: ["los angeles c"] },
+  { city: "Los Angeles", mascot: "Rams", abbr: "LAR", name: "LA Rams", aliases: ["los angeles r"] },
   { city: "Las Vegas", mascot: "Raiders", abbr: "LV", name: "Las Vegas Raiders" },
   { city: "Miami", mascot: "Dolphins", abbr: "MIA", name: "Miami Dolphins" },
   { city: "Minnesota", mascot: "Vikings", abbr: "MIN", name: "Minnesota Vikings" },
@@ -47,7 +48,12 @@ export const NFL_TEAMS: NflTeam[] = [
   { city: "Washington", mascot: "Commanders", abbr: "WAS", name: "Washington Commanders" },
 ];
 
-/** Finds the single NFL team a short string (an outcome label, a title) refers to. */
+/**
+ * Finds the single NFL team a short string (an outcome label, a title)
+ * refers to. Checks most-specific first: mascot ("Saints") beats
+ * abbreviation beats a source-specific alias beats a bare city name, since
+ * city alone is ambiguous for the two New York and two LA teams.
+ */
 export function findTeam(text: string): NflTeam | null {
   const norm = text.toLowerCase();
   for (const t of NFL_TEAMS) {
@@ -55,6 +61,12 @@ export function findTeam(text: string): NflTeam | null {
   }
   for (const t of NFL_TEAMS) {
     if (new RegExp(`\\b${t.abbr.toLowerCase()}\\b`).test(norm)) return t;
+  }
+  for (const t of NFL_TEAMS) {
+    if (t.aliases?.some((a) => norm.includes(a))) return t;
+  }
+  for (const t of NFL_TEAMS) {
+    if (norm.includes(t.city.toLowerCase())) return t;
   }
   return null;
 }
