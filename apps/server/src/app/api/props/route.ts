@@ -27,7 +27,8 @@ export async function GET(request: Request) {
 
   try {
     const props = await fetchPolymarketGameProps(sport, teamA, teamB);
-    if (props.passing.length === 0 && props.receiving.length === 0) {
+    const hasAny = Object.values(props).some((lines) => lines.length > 0);
+    if (!hasAny) {
       polymarket = generateDemoProps();
       demo = true;
       reason = "polymarket: no live prop markets found for this game";

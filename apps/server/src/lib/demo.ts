@@ -42,9 +42,19 @@ export function generateDemoEvents(source: Source, sport: string): OddsEvent[] {
 // a made-up role name isn't.
 export function generateDemoProps(): GameProps {
   return {
+    anytimeTd: [
+      { label: "Home WR1 Anytime Touchdown", line: null, overProbability: 0.42, sourceUrl: "" },
+      { label: "Home RB1 Anytime Touchdown", line: null, overProbability: 0.38, sourceUrl: "" },
+      { label: "Away WR1 Anytime Touchdown", line: null, overProbability: 0.4, sourceUrl: "" },
+      { label: "Away RB1 Anytime Touchdown", line: null, overProbability: 0.35, sourceUrl: "" },
+    ],
     passing: [
       { label: "Home Starting QB — Over 245.5 Passing Yards", line: 245.5, overProbability: 0.52, sourceUrl: "" },
       { label: "Away Starting QB — Over 231.5 Passing Yards", line: 231.5, overProbability: 0.48, sourceUrl: "" },
+    ],
+    rushing: [
+      { label: "Home RB1 — Over 62.5 Rushing Yards", line: 62.5, overProbability: 0.51, sourceUrl: "" },
+      { label: "Away RB1 — Over 58.5 Rushing Yards", line: 58.5, overProbability: 0.49, sourceUrl: "" },
     ],
     receiving: [
       { label: "Home WR1 — Over 68.5 Receiving Yards", line: 68.5, overProbability: 0.55, sourceUrl: "" },

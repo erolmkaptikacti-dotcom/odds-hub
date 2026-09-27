@@ -3,7 +3,7 @@
 // public gamma-api, which serves "events" (a game/matchup) each containing
 // one or more binary "markets" (Yes/No outcomes with a live price = implied
 // probability).
-import type { OddsEvent, OddsOutcome, PropLine } from "./types";
+import type { GameProps, OddsEvent, OddsOutcome, PropCategory, PropLine } from "./types";
 import type { NflTeam } from "./nflTeams";
 
 const GAMMA_API = "https://gamma-api.polymarket.com";
@@ -174,18 +174,24 @@ export async function fetchPolymarketEvents(sport: string): Promise<OddsEvent[]>
 // have no roster database to reliably say which of the two teams they're
 // on, so props are returned as one list for the game rather than split
 // per team.
-const PASSING_YARDS_RE = /passing yards/i;
-const RECEIVING_YARDS_RE = /receiv\w* yards/i;
+const CATEGORY_PATTERNS: [PropCategory, RegExp][] = [
+  [ "anytimeTd", /anytime touchdown|to score a touchdown/i ],
+  [ "passing", /passing yards/i ],
+  [ "rushing", /rushing yards/i ],
+  [ "receiving", /receiv\w* yards/i ],
+];
 const LINE_NUMBER_RE = /(\d+(?:\.\d+)?)/;
 
-function extractPropLine(market: RawMarket, eventUrl: string): PropLine | null {
+function extractPropLine(market: RawMarket, eventUrl: string, category: PropCategory): PropLine | null {
   const names = parseJsonArray(market.outcomes);
   const prices = parseJsonArray(market.outcomePrices).map(Number);
   if (names.length === 0 || prices.length !== names.length) return null;
 
   const overIndex = names.findIndex((n) => /^(over|yes)$/i.test(n.trim()));
   const overProbability = overIndex !== -1 ? prices[overIndex] : null;
-  const lineMatch = (market.question ?? "").match(LINE_NUMBER_RE);
+  // Anytime-TD markets are a plain Yes/No with no yardage threshold —
+  // don't scan for a stray number in the question text.
+  const lineMatch = category === "anytimeTd" ? null : (market.question ?? "").match(LINE_NUMBER_RE);
 
   return {
     label: market.question ?? "Prop",
@@ -200,39 +206,42 @@ function eventMentionsBothTeams(raw: RawEvent, teamA: NflTeam, teamB: NflTeam): 
   return text.includes(teamA.mascot.toLowerCase()) && text.includes(teamB.mascot.toLowerCase());
 }
 
+const CATEGORY_CAP: Record<PropCategory, number> = {
+  anytimeTd: 12,
+  passing: 6,
+  rushing: 10,
+  receiving: 12,
+};
+
 /**
- * QB passing-yards and receiver receiving-yards prop lines for one game.
- * Polymarket sometimes splits a game's props into a separate "event" from
- * its moneyline (e.g. a "-player-props" suffixed one), so this scans every
- * event mentioning both teams, not just the one mapEvent picked.
+ * Anytime-touchdown, passing/rushing/receiving-yards prop lines for one
+ * game, bucketed by category. Polymarket sometimes splits a game's props
+ * into a separate "event" from its moneyline (e.g. a "-player-props"
+ * suffixed one), so this scans every event mentioning both teams, not
+ * just the one mapEvent picked.
  */
-export async function fetchPolymarketGameProps(
-  sport: string,
-  teamA: NflTeam,
-  teamB: NflTeam
-): Promise<{ passing: PropLine[]; receiving: PropLine[] }> {
+export async function fetchPolymarketGameProps(sport: string, teamA: NflTeam, teamB: NflTeam): Promise<GameProps> {
+  const result: GameProps = { anytimeTd: [], passing: [], rushing: [], receiving: [] };
+
   const tag = POLYMARKET_SPORT_TAGS[sport];
-  if (!tag) return { passing: [], receiving: [] };
+  if (!tag) return result;
 
   const events = await fetchPolymarketRawEvents(tag);
   const matching = events.filter((e) => eventMentionsBothTeams(e, teamA, teamB));
-
-  const passing: PropLine[] = [];
-  const receiving: PropLine[] = [];
 
   for (const event of matching) {
     const eventUrl = `https://polymarket.com/event/${event.slug ?? event.id}`;
     for (const market of event.markets ?? []) {
       const question = market.question ?? "";
-      if (PASSING_YARDS_RE.test(question)) {
-        const line = extractPropLine(market, eventUrl);
-        if (line) passing.push(line);
-      } else if (RECEIVING_YARDS_RE.test(question)) {
-        const line = extractPropLine(market, eventUrl);
-        if (line) receiving.push(line);
-      }
+      const category = CATEGORY_PATTERNS.find(([, re]) => re.test(question))?.[0];
+      if (!category) continue;
+      const line = extractPropLine(market, eventUrl, category);
+      if (line) result[category].push(line);
     }
   }
 
-  return { passing: passing.slice(0, 6), receiving: receiving.slice(0, 8) };
+  for (const category of Object.keys(result) as PropCategory[]) {
+    result[category] = result[category].slice(0, CATEGORY_CAP[category]);
+  }
+  return result;
 }

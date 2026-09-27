@@ -57,10 +57,9 @@ export interface PropLine {
   sourceUrl: string;
 }
 
-export interface GameProps {
-  passing: PropLine[];
-  receiving: PropLine[];
-}
+export type PropCategory = "anytimeTd" | "passing" | "rushing" | "receiving";
+
+export type GameProps = Record<PropCategory, PropLine[]>;
 
 export interface GamePropsResponse {
   gameId: string;

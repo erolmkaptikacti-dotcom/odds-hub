@@ -1,21 +1,29 @@
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { useState } from "react";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { API_BASE_URL } from "@/config";
 import { usePolledFetch } from "@/hooks/usePolledFetch";
 import { colors, font, fontMedium } from "@/theme";
 import { sharedStyles } from "@/sharedStyles";
-import type { GameOdds, GameProps, GamePropsResponse, PropLine } from "@/types";
+import type { GameOdds, GameProps, GamePropsResponse, PropCategory, PropLine } from "@/types";
 
 const SOURCE_BRAND_COLOR = {
   polymarket: "#1652F0",
   kalshi: "#00D298",
 };
 
+const CATEGORIES: { key: PropCategory; label: string }[] = [
+  { key: "anytimeTd", label: "Anytime TD" },
+  { key: "passing", label: "Passing Yards" },
+  { key: "rushing", label: "Rushing Yards" },
+  { key: "receiving", label: "Receiving Yards" },
+];
+
 // The market question already names the player before "Over/Under N
-// yards?" — strip that part off so we can show the player's name as its
-// own line and the number as its own big stat, instead of one long
-// sentence.
+// yards?" (or just "Anytime Touchdown") — strip that part off so we can
+// show the player's name as its own line and the number as its own big
+// stat, instead of one long sentence.
 function playerName(label: string): string {
-  const idx = label.search(/\b(over|under)\b/i);
+  const idx = label.search(/\b(over|under|anytime)\b/i);
   const name = (idx === -1 ? label : label.slice(0, idx)).replace(/^will\s+/i, "").trim();
   return name || label;
 }
@@ -29,7 +37,7 @@ function PropRow({ prop }: { prop: PropLine }) {
         {playerName(prop.label)}
       </Text>
       <View style={styles.propStatRow}>
-        <Text style={styles.propLine}>{prop.line !== null ? `${prop.line} yds` : "Line TBD"}</Text>
+        <Text style={styles.propLine}>{prop.line !== null ? `${prop.line} yds` : "—"}</Text>
         <View style={styles.propBoxes}>
           <View style={[styles.propBox, styles.propBoxYes]}>
             <Text style={styles.propBoxLabel}>YES</Text>
@@ -45,45 +53,37 @@ function PropRow({ prop }: { prop: PropLine }) {
   );
 }
 
-function SourcePropsColumn({
+function SourcePropsSection({
   label,
   brandColor,
-  props,
+  lines,
+  available,
 }: {
   label: string;
   brandColor: string;
-  props: GameProps | null;
+  lines: PropLine[];
+  available: boolean;
 }) {
   return (
-    <View style={styles.sourceColumn}>
+    <View style={styles.sourceSection}>
       <Text style={[styles.sourceLabel, { color: brandColor }]}>{label}</Text>
-
-      {!props && <Text style={sharedStyles.muted}>Not available yet</Text>}
-
-      {props && (
-        <>
-          <Text style={styles.groupHeading}>QB Passing Yards</Text>
-          {props.passing.length === 0 && <Text style={sharedStyles.muted}>No lines found</Text>}
-          {props.passing.map((p, i) => (
-            <PropRow key={`p${i}`} prop={p} />
-          ))}
-
-          <Text style={[styles.groupHeading, { marginTop: 24 }]}>Receiving Yards</Text>
-          {props.receiving.length === 0 && <Text style={sharedStyles.muted}>No lines found</Text>}
-          {props.receiving.map((p, i) => (
-            <PropRow key={`r${i}`} prop={p} />
-          ))}
-        </>
-      )}
+      {!available && <Text style={sharedStyles.muted}>Not available yet</Text>}
+      {available && lines.length === 0 && <Text style={sharedStyles.muted}>No lines found</Text>}
+      {lines.map((p, i) => (
+        <PropRow key={i} prop={p} />
+      ))}
     </View>
   );
 }
 
 export function GameDetailScreen({ game }: { game: GameOdds }) {
+  const [category, setCategory] = useState<PropCategory>("anytimeTd");
   const { data, error, loading } = usePolledFetch<GamePropsResponse>(
     `${API_BASE_URL}/api/props?sport=${game.sport}&gameId=${game.id}`,
     30_000
   );
+
+  const empty: GameProps = { anytimeTd: [], passing: [], rushing: [], receiving: [] };
 
   return (
     <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
@@ -99,6 +99,20 @@ export function GameDetailScreen({ game }: { game: GameOdds }) {
         )}
       </View>
 
+      <View style={styles.categoryRow}>
+        {CATEGORIES.map((c) => (
+          <Pressable
+            key={c.key}
+            onPress={() => setCategory(c.key)}
+            style={[styles.categoryChip, category === c.key && styles.categoryChipActive]}
+          >
+            <Text style={[styles.categoryChipText, category === c.key && styles.categoryChipTextActive]}>
+              {c.label}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+
       {loading && !data && (
         <View style={sharedStyles.centerBox}>
           <Text style={sharedStyles.muted}>Loading props…</Text>
@@ -112,10 +126,20 @@ export function GameDetailScreen({ game }: { game: GameOdds }) {
       )}
 
       {data && (
-        <View style={styles.sourcesColumnStack}>
-          <SourcePropsColumn label="POLYMARKET" brandColor={SOURCE_BRAND_COLOR.polymarket} props={data.polymarket} />
+        <View style={styles.body}>
+          <SourcePropsSection
+            label="POLYMARKET"
+            brandColor={SOURCE_BRAND_COLOR.polymarket}
+            lines={(data.polymarket ?? empty)[category]}
+            available={data.polymarket !== null}
+          />
           <View style={styles.sourcesGap} />
-          <SourcePropsColumn label="KALSHI" brandColor={SOURCE_BRAND_COLOR.kalshi} props={data.kalshi} />
+          <SourcePropsSection
+            label="KALSHI"
+            brandColor={SOURCE_BRAND_COLOR.kalshi}
+            lines={(data.kalshi ?? empty)[category]}
+            available={data.kalshi !== null}
+          />
         </View>
       )}
     </ScrollView>
@@ -126,7 +150,7 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: 16,
     paddingTop: 8,
-    paddingBottom: 20,
+    paddingBottom: 12,
   },
   matchup: {
     color: colors.textPrimary,
@@ -159,15 +183,41 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
   },
-  // Stacked, not side-by-side: at the bigger text sizes this needs the
-  // full screen width per source to stay readable, hence "fine to scroll".
-  sourcesColumnStack: {
+  categoryRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+  },
+  categoryChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 2,
+    backgroundColor: colors.surface,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+  },
+  categoryChipActive: {
+    backgroundColor: colors.invertedBg,
+    borderColor: colors.invertedBg,
+  },
+  categoryChipText: {
+    color: colors.textSecondary,
+    fontSize: 14,
+    fontWeight: "700",
+    fontFamily: fontMedium,
+  },
+  categoryChipTextActive: {
+    color: colors.invertedText,
+  },
+  body: {
     paddingHorizontal: 16,
   },
   sourcesGap: {
     height: 32,
   },
-  sourceColumn: {
+  sourceSection: {
     flex: 1,
   },
   sourceLabel: {
@@ -176,15 +226,6 @@ const styles = StyleSheet.create({
     fontFamily: fontMedium,
     letterSpacing: 0.6,
     marginBottom: 14,
-  },
-  groupHeading: {
-    color: colors.textMuted,
-    fontSize: 14,
-    fontWeight: "700",
-    fontFamily: fontMedium,
-    letterSpacing: 0.6,
-    textTransform: "uppercase",
-    marginBottom: 10,
   },
   propRow: {
     borderTopWidth: 1,
