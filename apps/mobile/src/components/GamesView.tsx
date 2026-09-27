@@ -62,7 +62,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "700",
     fontFamily: fontMedium,
-    letterSpacing: 0.8,
+    letterSpacing: 0.3,
     borderWidth: 1,
     borderColor: colors.borderStrong,
     paddingHorizontal: 8,

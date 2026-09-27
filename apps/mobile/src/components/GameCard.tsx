@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     fontSize: 13,
-    fontWeight: "800",
+    fontWeight: "700",
     fontFamily: fontMedium,
     letterSpacing: 0.3,
   },
@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "700",
     fontFamily: fontMedium,
-    letterSpacing: 0.6,
+    letterSpacing: 0.2,
     textAlign: "center",
     paddingHorizontal: 8,
   },
@@ -198,9 +198,9 @@ const styles = StyleSheet.create({
   },
   sourceLabel: {
     fontSize: 14,
-    fontWeight: "800",
+    fontWeight: "700",
     fontFamily: fontMedium,
-    letterSpacing: 0.6,
+    letterSpacing: 0.2,
     marginBottom: 6,
   },
   sourceRow: {

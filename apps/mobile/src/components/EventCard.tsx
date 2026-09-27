@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "700",
     fontFamily: fontMedium,
-    letterSpacing: 0.6,
+    letterSpacing: 0.2,
     color: colors.textPrimary,
   },
   volume: {

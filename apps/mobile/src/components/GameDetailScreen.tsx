@@ -99,19 +99,21 @@ export function GameDetailScreen({ game }: { game: GameOdds }) {
         )}
       </View>
 
-      <View style={styles.categoryRow}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.categoryScroller}
+        contentContainerStyle={styles.categoryRow}
+      >
         {CATEGORIES.map((c) => (
-          <Pressable
-            key={c.key}
-            onPress={() => setCategory(c.key)}
-            style={[styles.categoryChip, category === c.key && styles.categoryChipActive]}
-          >
-            <Text style={[styles.categoryChipText, category === c.key && styles.categoryChipTextActive]}>
+          <Pressable key={c.key} onPress={() => setCategory(c.key)} style={styles.categoryTab}>
+            <Text style={[styles.categoryTabText, category === c.key && styles.categoryTabTextActive]}>
               {c.label}
             </Text>
+            {category === c.key && <View style={styles.categoryUnderline} />}
           </Pressable>
         ))}
-      </View>
+      </ScrollView>
 
       {loading && !data && (
         <View style={sharedStyles.centerBox}>
@@ -177,39 +179,41 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "700",
     fontFamily: fontMedium,
-    letterSpacing: 0.8,
+    letterSpacing: 0.3,
     borderWidth: 1,
     borderColor: colors.borderStrong,
     paddingHorizontal: 8,
     paddingVertical: 4,
   },
+  categoryScroller: {
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
   categoryRow: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
+    gap: 26,
     paddingHorizontal: 16,
-    paddingBottom: 16,
+    paddingBottom: 14,
   },
-  categoryChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 2,
-    backgroundColor: colors.surface,
-    borderWidth: 1.5,
-    borderColor: colors.border,
+  categoryTab: {
+    alignItems: "center",
   },
-  categoryChipActive: {
-    backgroundColor: colors.invertedBg,
-    borderColor: colors.invertedBg,
-  },
-  categoryChipText: {
-    color: colors.textSecondary,
-    fontSize: 14,
-    fontWeight: "700",
+  categoryTabText: {
+    color: colors.textMuted,
+    fontSize: 19,
+    fontWeight: "600",
     fontFamily: fontMedium,
   },
-  categoryChipTextActive: {
-    color: colors.invertedText,
+  categoryTabTextActive: {
+    color: colors.textPrimary,
+    fontWeight: "700",
+  },
+  categoryUnderline: {
+    marginTop: 8,
+    height: 3,
+    width: "100%",
+    borderRadius: 2,
+    backgroundColor: colors.textPrimary,
   },
   body: {
     paddingHorizontal: 16,
@@ -222,9 +226,9 @@ const styles = StyleSheet.create({
   },
   sourceLabel: {
     fontSize: 20,
-    fontWeight: "800",
+    fontWeight: "700",
     fontFamily: fontMedium,
-    letterSpacing: 0.6,
+    letterSpacing: 0.2,
     marginBottom: 14,
   },
   propRow: {
@@ -274,14 +278,14 @@ const styles = StyleSheet.create({
   },
   propBoxLabel: {
     fontSize: 10,
-    fontWeight: "800",
+    fontWeight: "700",
     fontFamily: fontMedium,
-    letterSpacing: 0.6,
+    letterSpacing: 0.2,
     color: colors.textMuted,
   },
   propBoxValue: {
     fontSize: 15,
-    fontWeight: "800",
+    fontWeight: "700",
     fontFamily: fontMedium,
     color: colors.textPrimary,
     fontVariant: ["tabular-nums"],
