@@ -1,15 +1,24 @@
 import { useState } from "react";
-import { Pressable, SafeAreaView, StatusBar, StyleSheet, Text, View } from "react-native";
+import { Animated, Pressable, SafeAreaView, StatusBar, StyleSheet, Text, View } from "react-native";
 import { GAME_MATCHING_SPORTS, SPORTS } from "@/config";
 import { GamesView } from "@/components/GamesView";
 import { EventsView } from "@/components/EventsView";
 import { GameDetailScreen } from "@/components/GameDetailScreen";
+import { useSlideTransition } from "@/hooks/useSlideTransition";
 import { colors, fontMedium } from "@/theme";
 import type { GameOdds } from "@/types";
+
+// "detail" always sorts after every sport, so opening a game always slides
+// in from the right and going back always slides in from the left;
+// switching sports slides left/right based on their order in SPORTS.
+const SCREEN_ORDER = [...SPORTS.map((s) => `list:${s.key}`), "detail"];
 
 export default function App() {
   const [sport, setSport] = useState<string>(SPORTS[0].key);
   const [selectedGame, setSelectedGame] = useState<GameOdds | null>(null);
+
+  const activeKey = selectedGame ? "detail" : `list:${sport}`;
+  const slideStyle = useSlideTransition(activeKey, SCREEN_ORDER);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -43,13 +52,15 @@ export default function App() {
         </>
       )}
 
-      {selectedGame ? (
-        <GameDetailScreen game={selectedGame} />
-      ) : GAME_MATCHING_SPORTS.has(sport) ? (
-        <GamesView sport={sport} onSelectGame={setSelectedGame} />
-      ) : (
-        <EventsView sport={sport} />
-      )}
+      <Animated.View style={[{ flex: 1 }, slideStyle]}>
+        {selectedGame ? (
+          <GameDetailScreen game={selectedGame} />
+        ) : GAME_MATCHING_SPORTS.has(sport) ? (
+          <GamesView sport={sport} onSelectGame={setSelectedGame} />
+        ) : (
+          <EventsView sport={sport} />
+        )}
+      </Animated.View>
     </SafeAreaView>
   );
 }

@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Animated, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { API_BASE_URL } from "@/config";
 import { usePolledFetch } from "@/hooks/usePolledFetch";
+import { useSlideTransition } from "@/hooks/useSlideTransition";
 import { colors, font, fontMedium } from "@/theme";
 import { sharedStyles } from "@/sharedStyles";
 import type { GameOdds, GameProps, GamePropsResponse, PropCategory, PropLine } from "@/types";
@@ -17,6 +18,7 @@ const CATEGORIES: { key: PropCategory; label: string }[] = [
   { key: "rushing", label: "Rushing Yards" },
   { key: "receiving", label: "Receiving Yards" },
 ];
+const CATEGORY_ORDER = CATEGORIES.map((c) => c.key);
 
 // The market question already names the player before "Over/Under N
 // yards?" (or just "Anytime Touchdown") — strip that part off so we can
@@ -78,6 +80,7 @@ function SourcePropsSection({
 
 export function GameDetailScreen({ game }: { game: GameOdds }) {
   const [category, setCategory] = useState<PropCategory>("anytimeTd");
+  const slideStyle = useSlideTransition(category, CATEGORY_ORDER);
   const { data, error, loading } = usePolledFetch<GamePropsResponse>(
     `${API_BASE_URL}/api/props?sport=${game.sport}&gameId=${game.id}`,
     30_000
@@ -128,7 +131,7 @@ export function GameDetailScreen({ game }: { game: GameOdds }) {
       )}
 
       {data && (
-        <View style={styles.body}>
+        <Animated.View style={[styles.body, slideStyle]}>
           <SourcePropsSection
             label="POLYMARKET"
             brandColor={SOURCE_BRAND_COLOR.polymarket}
@@ -142,7 +145,7 @@ export function GameDetailScreen({ game }: { game: GameOdds }) {
             lines={(data.kalshi ?? empty)[category]}
             available={data.kalshi !== null}
           />
-        </View>
+        </Animated.View>
       )}
     </ScrollView>
   );
