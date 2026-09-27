@@ -1,14 +1,10 @@
 import { StyleSheet, Text, View } from "react-native";
 import type { OddsEvent } from "@/types";
+import { colors, font, fontMedium } from "@/theme";
 
 const SOURCE_LABEL: Record<OddsEvent["source"], string> = {
   polymarket: "Polymarket",
   kalshi: "Kalshi",
-};
-
-const SOURCE_COLOR: Record<OddsEvent["source"], string> = {
-  polymarket: "#6d5ce8",
-  kalshi: "#2fbf71",
 };
 
 function formatVolume(v: number): string {
@@ -21,12 +17,10 @@ export function EventCard({ event }: { event: OddsEvent }) {
   return (
     <View style={styles.card}>
       <View style={styles.header}>
-        <View style={[styles.badge, { backgroundColor: `${SOURCE_COLOR[event.source]}26` }]}>
-          <Text style={[styles.badgeText, { color: SOURCE_COLOR[event.source] }]}>
-            {SOURCE_LABEL[event.source]}
-          </Text>
+        <View style={styles.badge}>
+          <Text style={styles.badgeText}>{SOURCE_LABEL[event.source]}</Text>
         </View>
-        <Text style={styles.volume}>{formatVolume(event.volume)} vol</Text>
+        <Text style={styles.volume}>{formatVolume(event.volume)} VOL</Text>
       </View>
       <Text style={styles.title}>{event.title}</Text>
       <View style={styles.outcomes}>
@@ -45,41 +39,49 @@ export function EventCard({ event }: { event: OddsEvent }) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#11151f",
-    borderRadius: 14,
-    padding: 14,
+    backgroundColor: colors.surface,
+    borderRadius: 2,
+    padding: 16,
     marginHorizontal: 16,
     marginVertical: 6,
     borderWidth: 1,
-    borderColor: "rgba(148,163,197,0.14)",
+    borderColor: colors.border,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 10,
   },
   badge: {
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 999,
+    borderRadius: 2,
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
   },
   badgeText: {
-    fontSize: 11,
-    fontWeight: "600",
+    fontSize: 10,
+    fontWeight: "700",
+    fontFamily: fontMedium,
+    letterSpacing: 0.6,
+    color: colors.textPrimary,
   },
   volume: {
-    color: "#6d7890",
+    color: colors.textMuted,
     fontSize: 11,
+    fontFamily: font,
+    letterSpacing: 0.3,
   },
   title: {
-    color: "#eef1f8",
-    fontSize: 15,
-    fontWeight: "600",
-    marginBottom: 10,
+    color: colors.textPrimary,
+    fontSize: 16,
+    fontWeight: "700",
+    fontFamily: fontMedium,
+    marginBottom: 12,
   },
   outcomes: {
-    gap: 6,
+    gap: 8,
   },
   outcomeRow: {
     flexDirection: "row",
@@ -87,15 +89,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   outcomeName: {
-    color: "#aab3c7",
+    color: colors.textSecondary,
     fontSize: 13,
+    fontFamily: font,
     flexShrink: 1,
     marginRight: 8,
   },
   outcomeProb: {
-    color: "#eef1f8",
-    fontSize: 14,
+    color: colors.textPrimary,
+    fontSize: 15,
     fontWeight: "700",
+    fontFamily: fontMedium,
     fontVariant: ["tabular-nums"],
   },
 });

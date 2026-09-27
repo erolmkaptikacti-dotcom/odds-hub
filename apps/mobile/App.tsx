@@ -12,6 +12,7 @@ import {
 import { API_BASE_URL, POLL_INTERVAL_MS, SPORTS } from "@/config";
 import { usePolledFetch } from "@/hooks/usePolledFetch";
 import { EventCard } from "@/components/EventCard";
+import { colors, font, fontMedium } from "@/theme";
 import type { EventsResponse } from "@/types";
 
 export default function App() {
@@ -67,7 +68,7 @@ export default function App() {
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => <EventCard event={item} />}
         contentContainerStyle={{ paddingVertical: 8, paddingBottom: 24 }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor="#4d8dff" />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.textPrimary} />}
       />
     </SafeAreaView>
   );
@@ -76,57 +77,62 @@ export default function App() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: "#0a0d14",
+    backgroundColor: colors.bg,
   },
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 10,
     paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: 4,
   },
   title: {
-    color: "#eef1f8",
-    fontSize: 22,
+    color: colors.textPrimary,
+    fontSize: 24,
     fontWeight: "700",
+    fontFamily: fontMedium,
+    letterSpacing: 0.5,
   },
   demoBadge: {
-    color: "#eaa73c",
+    color: colors.textPrimary,
     fontSize: 10,
     fontWeight: "700",
-    backgroundColor: "rgba(234,167,60,0.15)",
+    fontFamily: fontMedium,
+    letterSpacing: 0.8,
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 999,
-    overflow: "hidden",
   },
   sportRow: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 8,
+    gap: 10,
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingVertical: 14,
   },
   sportChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 999,
-    backgroundColor: "#11151f",
-    borderWidth: 1,
-    borderColor: "rgba(148,163,197,0.14)",
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 2,
+    backgroundColor: colors.surface,
+    borderWidth: 1.5,
+    borderColor: colors.border,
   },
   sportChipActive: {
-    backgroundColor: "#4d8dff",
-    borderColor: "#4d8dff",
+    backgroundColor: colors.invertedBg,
+    borderColor: colors.invertedBg,
   },
   sportChipText: {
-    color: "#aab3c7",
-    fontSize: 13,
+    color: colors.textSecondary,
+    fontSize: 15,
     fontWeight: "600",
+    fontFamily: fontMedium,
+    letterSpacing: 0.3,
   },
   sportChipTextActive: {
-    color: "#0a0d14",
+    color: colors.invertedText,
   },
   centerBox: {
     padding: 24,
@@ -134,13 +140,16 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   muted: {
-    color: "#6d7890",
+    color: colors.textMuted,
     fontSize: 13,
+    fontFamily: font,
     textAlign: "center",
   },
   errorText: {
-    color: "#e5544b",
+    color: colors.error,
     fontSize: 13,
+    fontFamily: font,
+    fontWeight: "600",
     textAlign: "center",
   },
 });
