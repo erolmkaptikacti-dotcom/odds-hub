@@ -5,6 +5,9 @@ export default function Home() {
       <p>This is the backend for the OddsHub mobile app. Try:</p>
       <ul>
         <li>
+          <a href="/api/games?sport=nfl">/api/games?sport=nfl</a> — per-game moneylines, merged
+        </li>
+        <li>
           <a href="/api/events?sport=nfl">/api/events?sport=nfl</a>
         </li>
         <li>

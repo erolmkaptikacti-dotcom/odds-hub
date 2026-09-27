@@ -26,3 +26,26 @@ export interface EventsResponse {
   reason?: string;
   updatedAt: number;
 }
+
+export interface GameSourceOdds {
+  teamAProbability: number | null;
+  teamBProbability: number | null;
+  sourceUrl: string;
+}
+
+export interface GameOdds {
+  id: string;
+  sport: string;
+  teamA: string;
+  teamB: string;
+  kickoff: string | null;
+  polymarket: GameSourceOdds | null;
+  kalshi: GameSourceOdds | null;
+}
+
+export interface GamesResponse {
+  games: GameOdds[];
+  demo: boolean;
+  reason?: string;
+  updatedAt: number;
+}

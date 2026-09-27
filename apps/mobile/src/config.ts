@@ -13,3 +13,9 @@ export const SPORTS = [
 ] as const;
 
 export const POLL_INTERVAL_MS = 30_000;
+
+// Sports with a team-name dictionary on the server (apps/server/src/lib),
+// so /api/games can match the same game across Polymarket and Kalshi.
+// Everything else falls back to the per-source event list.
+export const GAME_MATCHING_SPORTS = new Set(["nfl"]);
+
