@@ -53,15 +53,79 @@ function parseJsonArray(raw: string | undefined): string[] {
   }
 }
 
+// Words that mark an event as a season-long future (a division/series
+// winner, an award, a championship) rather than a single upcoming game —
+// these share Polymarket's team-vs-team title shape, so team-name matching
+// alone can't tell them apart. "vspt" shows up in Polymarket's own slugs
+// for these (e.g. "cardinals-vspt-49ers-season-series-winner").
+const FUTURES_KEYWORDS = [
+  "season series",
+  "series winner",
+  "champion",
+  "mvp",
+  "make the playoffs",
+  "playoffs",
+  "award",
+  "coach of the year",
+  "draft",
+  "division winner",
+  "conference winner",
+  "super bowl winner",
+  "total wins",
+  "vspt",
+];
+
+// Words that mark a market as a prop bet (player stats, total points, a
+// specific quarter) rather than the game's moneyline, even when an event
+// otherwise looks like a normal upcoming game.
+const PROP_KEYWORDS = [
+  "props",
+  "prop",
+  "total points",
+  "spread",
+  "anytime",
+  "touchdown scorer",
+  "passing yards",
+  "rushing yards",
+  "receiving yards",
+  "field goal",
+  "quarter",
+  " half",
+  "first score",
+  "to score",
+];
+
+function includesAny(text: string, keywords: string[]): boolean {
+  const norm = text.toLowerCase();
+  return keywords.some((k) => norm.includes(k));
+}
+
+// Real weekly games close within days; season-long futures close at the
+// end of the season, months out. Anything further than ~9 days away is
+// treated as a future, not this week's slate.
+function isFarFuture(endDate: string | undefined): boolean {
+  if (!endDate) return false;
+  const end = new Date(endDate).getTime();
+  if (Number.isNaN(end)) return false;
+  return end - Date.now() > 9 * 24 * 60 * 60 * 1000;
+}
+
+/** Picks the market that represents the game's moneyline, not a prop bet, out of everything bundled under one event. */
+function pickMoneylineMarket(raw: RawEvent): RawMarket | undefined {
+  const candidates = (raw.markets ?? []).filter((m) => parseJsonArray(m.outcomePrices).length > 0);
+  if (candidates.length === 0) return undefined;
+  const nonProps = candidates.filter((m) => !includesAny(m.question ?? "", PROP_KEYWORDS));
+  return nonProps[0] ?? candidates[0];
+}
+
 function mapEvent(raw: RawEvent, sport: string): OddsEvent | null {
   const id = raw.id ?? raw.slug;
   if (!id || !raw.title) return null;
+  if (includesAny(`${raw.title} ${raw.slug ?? ""}`, FUTURES_KEYWORDS)) return null;
+  if (includesAny(raw.slug ?? "", PROP_KEYWORDS)) return null;
+  if (isFarFuture(raw.endDate)) return null;
 
-  // A Polymarket "event" can bundle several markets (e.g. multiple prop
-  // questions for one game). For the odds view we want the primary
-  // moneyline-equivalent market: prefer one whose outcomes look like a
-  // binary Yes/No or team-vs-team pick, and that has a price.
-  const market = raw.markets?.find((m) => parseJsonArray(m.outcomePrices).length > 0);
+  const market = pickMoneylineMarket(raw);
   if (!market) return null;
 
   const names = parseJsonArray(market.outcomes);
