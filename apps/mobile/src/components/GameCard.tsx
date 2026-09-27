@@ -23,6 +23,12 @@ function pct(v: number | null): string {
   return v === null ? "—" : `${Math.round(v * 100)}%`;
 }
 
+// Each platform's own brand color, used for its column heading.
+const SOURCE_BRAND_COLOR = {
+  polymarket: "#1652F0",
+  kalshi: "#00D298",
+};
+
 function TeamBadge({ name, align }: { name: string; align: "left" | "right" }) {
   const style = teamStyle(name);
   return (
@@ -39,11 +45,13 @@ function TeamBadge({ name, align }: { name: string; align: "left" | "right" }) {
 
 function SourceColumn({
   label,
+  brandColor,
   odds,
   teamA,
   teamB,
 }: {
   label: string;
+  brandColor: string;
   odds: GameSourceOdds | null;
   teamA: string;
   teamB: string;
@@ -52,7 +60,7 @@ function SourceColumn({
   const teamBStyle = teamStyle(teamB);
   return (
     <View style={styles.sourceColumn}>
-      <Text style={styles.sourceLabel}>{label}</Text>
+      <Text style={[styles.sourceLabel, { color: brandColor }]}>{label}</Text>
       <View style={styles.sourceRow}>
         <View style={[styles.sourceDot, { backgroundColor: teamAStyle.color }]} />
         <Text style={styles.sourceAbbr}>{teamAStyle.abbr}</Text>
@@ -92,9 +100,21 @@ export function GameCard({ game }: { game: GameOdds }) {
         <View style={styles.divider} />
 
         <View style={styles.sourcesRow}>
-          <SourceColumn label="POLYMARKET" odds={game.polymarket} teamA={game.teamA} teamB={game.teamB} />
+          <SourceColumn
+            label="POLYMARKET"
+            brandColor={SOURCE_BRAND_COLOR.polymarket}
+            odds={game.polymarket}
+            teamA={game.teamA}
+            teamB={game.teamB}
+          />
           <View style={styles.sourcesGap} />
-          <SourceColumn label="KALSHI" odds={game.kalshi} teamA={game.teamA} teamB={game.teamB} />
+          <SourceColumn
+            label="KALSHI"
+            brandColor={SOURCE_BRAND_COLOR.kalshi}
+            odds={game.kalshi}
+            teamA={game.teamA}
+            teamB={game.teamB}
+          />
         </View>
       </View>
     </View>
@@ -177,12 +197,11 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   sourceLabel: {
-    color: colors.textMuted,
-    fontSize: 10,
-    fontWeight: "700",
+    fontSize: 14,
+    fontWeight: "800",
     fontFamily: fontMedium,
-    letterSpacing: 0.8,
-    marginBottom: 2,
+    letterSpacing: 0.6,
+    marginBottom: 6,
   },
   sourceRow: {
     flexDirection: "row",
