@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Animated, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { API_BASE_URL } from "@/config";
 import { usePolledFetch } from "@/hooks/usePolledFetch";
@@ -20,37 +20,109 @@ const CATEGORIES: { key: PropCategory; label: string }[] = [
 ];
 const CATEGORY_ORDER = CATEGORIES.map((c) => c.key);
 
+// A neutral rotating palette for player avatars — not team colors, since
+// we don't reliably know which team a player is on (see mergeGames.ts).
+const AVATAR_COLORS = ["#3a5a78", "#6b4e8c", "#3c7a5c", "#8c5a3c", "#5a5a8c", "#7a3c5c"];
+
+function hashColor(name: string): string {
+  const sum = [...name].reduce((s, c) => s + c.charCodeAt(0), 0);
+  return AVATAR_COLORS[sum % AVATAR_COLORS.length];
+}
+
+function initials(name: string): string {
+  const words = name.split(/\s+/).filter(Boolean);
+  if (words.length === 0) return "?";
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+  return (words[0][0] + words[words.length - 1][0]).toUpperCase();
+}
+
 // The market question already names the player before "Over/Under N
 // yards?" (or just "Anytime Touchdown") — strip that part off so we can
-// show the player's name as its own line and the number as its own big
-// stat, instead of one long sentence.
+// show the player's name on its own, and group markets that share the
+// same extracted name into one card with a ladder of lines to pick from.
 function playerName(label: string): string {
   const idx = label.search(/\b(over|under|anytime)\b/i);
   const name = (idx === -1 ? label : label.slice(0, idx)).replace(/^will\s+/i, "").trim();
   return name || label;
 }
 
-function PropRow({ prop }: { prop: PropLine }) {
-  const over = prop.overProbability;
+interface PlayerGroup {
+  name: string;
+  lines: PropLine[];
+}
+
+function groupByPlayer(props: PropLine[]): PlayerGroup[] {
+  const order: string[] = [];
+  const byName = new Map<string, PropLine[]>();
+  for (const p of props) {
+    const name = playerName(p.label);
+    if (!byName.has(name)) {
+      byName.set(name, []);
+      order.push(name);
+    }
+    byName.get(name)!.push(p);
+  }
+  return order.map((name) => ({
+    name,
+    lines: [...byName.get(name)!].sort((a, b) => (a.line ?? 0) - (b.line ?? 0)),
+  }));
+}
+
+function PlayerPropCard({ group }: { group: PlayerGroup }) {
+  const midIndex = Math.floor((group.lines.length - 1) / 2);
+  const [selected, setSelected] = useState(midIndex);
+  const active = group.lines[selected];
+  const over = active.overProbability;
   const under = over === null ? null : 1 - over;
+  const avatarColor = hashColor(group.name);
+
   return (
-    <View style={styles.propRow}>
-      <Text style={styles.propPlayer} numberOfLines={2}>
-        {playerName(prop.label)}
-      </Text>
-      <View style={styles.propStatRow}>
-        <Text style={styles.propLine}>{prop.line !== null ? `${prop.line} yds` : "—"}</Text>
-        <View style={styles.propBoxes}>
-          <View style={[styles.propBox, styles.propBoxYes]}>
-            <Text style={styles.propBoxLabel}>YES</Text>
-            <Text style={styles.propBoxValue}>{over === null ? "—" : `${Math.round(over * 100)}%`}</Text>
+    <View style={styles.playerCard}>
+      <View style={styles.playerRow}>
+        <View style={[styles.avatar, { backgroundColor: avatarColor }]}>
+          <Text style={styles.avatarText}>{initials(group.name)}</Text>
+        </View>
+
+        <View style={styles.playerInfo}>
+          <Text style={styles.playerName} numberOfLines={1}>
+            {group.name}
+          </Text>
+          <View style={styles.linePill}>
+            <Text style={styles.linePillText}>{active.line !== null ? `${active.line} yds` : "Anytime"}</Text>
           </View>
-          <View style={[styles.propBox, styles.propBoxNo]}>
-            <Text style={styles.propBoxLabel}>NO</Text>
-            <Text style={styles.propBoxValue}>{under === null ? "—" : `${Math.round(under * 100)}%`}</Text>
+        </View>
+
+        <View style={styles.oddsPills}>
+          <View style={[styles.oddsPill, styles.oddsPillYes]}>
+            <Text style={styles.oddsPillLabel}>YES</Text>
+            <Text style={[styles.oddsPillValue, styles.oddsPillValueYes]}>
+              {over === null ? "—" : `${Math.round(over * 100)}%`}
+            </Text>
+          </View>
+          <View style={[styles.oddsPill, styles.oddsPillNo]}>
+            <Text style={styles.oddsPillLabel}>NO</Text>
+            <Text style={[styles.oddsPillValue, styles.oddsPillValueNo]}>
+              {under === null ? "—" : `${Math.round(under * 100)}%`}
+            </Text>
           </View>
         </View>
       </View>
+
+      {group.lines.length > 1 && (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.ladderScroller}>
+          {group.lines.map((line, i) => (
+            <Pressable
+              key={i}
+              onPress={() => setSelected(i)}
+              style={[styles.ladderPill, i === selected && styles.ladderPillActive]}
+            >
+              <Text style={[styles.ladderPillText, i === selected && styles.ladderPillTextActive]}>
+                {line.line !== null ? `${line.line}+` : "—"}
+              </Text>
+            </Pressable>
+          ))}
+        </ScrollView>
+      )}
     </View>
   );
 }
@@ -66,13 +138,14 @@ function SourcePropsSection({
   lines: PropLine[];
   available: boolean;
 }) {
+  const groups = useMemo(() => groupByPlayer(lines), [lines]);
   return (
     <View style={styles.sourceSection}>
       <Text style={[styles.sourceLabel, { color: brandColor }]}>{label}</Text>
       {!available && <Text style={sharedStyles.muted}>Not available yet</Text>}
-      {available && lines.length === 0 && <Text style={sharedStyles.muted}>No lines found</Text>}
-      {lines.map((p, i) => (
-        <PropRow key={i} prop={p} />
+      {available && groups.length === 0 && <Text style={sharedStyles.muted}>No lines found</Text>}
+      {groups.map((g) => (
+        <PlayerPropCard key={g.name} group={g} />
       ))}
     </View>
   );
@@ -220,9 +293,10 @@ const styles = StyleSheet.create({
   },
   body: {
     paddingHorizontal: 16,
+    paddingTop: 4,
   },
   sourcesGap: {
-    height: 32,
+    height: 28,
   },
   sourceSection: {
     flex: 1,
@@ -234,63 +308,117 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
     marginBottom: 14,
   },
-  propRow: {
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    paddingVertical: 14,
-    gap: 8,
+  playerCard: {
+    backgroundColor: colors.surface,
+    borderRadius: 20,
+    padding: 14,
+    marginBottom: 12,
+    gap: 12,
   },
-  propPlayer: {
+  playerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  avatar: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatarText: {
+    color: "#ffffff",
+    fontSize: 15,
+    fontWeight: "700",
+    fontFamily: fontMedium,
+  },
+  playerInfo: {
+    flex: 1,
+    gap: 6,
+  },
+  playerName: {
     color: colors.textPrimary,
     fontSize: 17,
     fontWeight: "700",
     fontFamily: fontMedium,
   },
-  propStatRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+  linePill: {
+    alignSelf: "flex-start",
+    backgroundColor: colors.surfaceRaised,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
   },
-  propLine: {
+  linePillText: {
     color: colors.textSecondary,
-    fontSize: 18,
-    fontWeight: "700",
+    fontSize: 13,
+    fontWeight: "600",
     fontFamily: fontMedium,
     fontVariant: ["tabular-nums"],
   },
-  propBoxes: {
+  oddsPills: {
     flexDirection: "row",
     gap: 8,
   },
-  propBox: {
-    minWidth: 56,
+  oddsPill: {
+    minWidth: 60,
     alignItems: "center",
-    borderRadius: 2,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
   },
-  propBoxYes: {
-    backgroundColor: "rgba(47,191,113,0.16)",
-    borderWidth: 1,
+  oddsPillYes: {
     borderColor: "#2fbf71",
+    backgroundColor: "rgba(47,191,113,0.12)",
   },
-  propBoxNo: {
-    backgroundColor: "rgba(229,84,75,0.16)",
-    borderWidth: 1,
+  oddsPillNo: {
     borderColor: "#e5544b",
+    backgroundColor: "rgba(229,84,75,0.12)",
   },
-  propBoxLabel: {
-    fontSize: 10,
+  oddsPillLabel: {
+    fontSize: 9,
     fontWeight: "700",
     fontFamily: fontMedium,
-    letterSpacing: 0.2,
+    letterSpacing: 0.3,
     color: colors.textMuted,
   },
-  propBoxValue: {
+  oddsPillValue: {
     fontSize: 15,
     fontWeight: "700",
     fontFamily: fontMedium,
-    color: colors.textPrimary,
     fontVariant: ["tabular-nums"],
+  },
+  oddsPillValueYes: {
+    color: "#3ddc85",
+  },
+  oddsPillValueNo: {
+    color: "#f0736b",
+  },
+  ladderScroller: {
+    marginLeft: 58, // align under the name, past the avatar
+  },
+  ladderPill: {
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginRight: 8,
+  },
+  ladderPillActive: {
+    backgroundColor: colors.invertedBg,
+    borderColor: colors.invertedBg,
+  },
+  ladderPillText: {
+    color: colors.textSecondary,
+    fontSize: 13,
+    fontWeight: "600",
+    fontFamily: fontMedium,
+    fontVariant: ["tabular-nums"],
+  },
+  ladderPillTextActive: {
+    color: colors.invertedText,
   },
 });
