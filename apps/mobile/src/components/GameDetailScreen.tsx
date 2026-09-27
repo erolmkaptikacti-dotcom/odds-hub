@@ -82,29 +82,31 @@ function PlayerPropCard({ group }: { group: PlayerGroup }) {
         <View style={[styles.avatar, { backgroundColor: avatarColor }]}>
           <Text style={styles.avatarText}>{initials(group.name)}</Text>
         </View>
+        <Text style={styles.playerName}>{group.name}</Text>
+      </View>
 
-        <View style={styles.playerInfo}>
-          <Text style={styles.playerName} numberOfLines={1}>
-            {group.name}
+      {active.line !== null && (
+        <View style={styles.projectedRow}>
+          <Text style={styles.projectedLabel}>PROJECTED</Text>
+          <Text style={styles.projectedValue}>
+            {active.line}
+            <Text style={styles.projectedUnit}> yds</Text>
           </Text>
-          <View style={styles.linePill}>
-            <Text style={styles.linePillText}>{active.line !== null ? `${active.line} yds` : "Anytime"}</Text>
-          </View>
         </View>
+      )}
 
-        <View style={styles.oddsPills}>
-          <View style={[styles.oddsPill, styles.oddsPillYes]}>
-            <Text style={styles.oddsPillLabel}>YES</Text>
-            <Text style={[styles.oddsPillValue, styles.oddsPillValueYes]}>
-              {over === null ? "—" : `${Math.round(over * 100)}%`}
-            </Text>
-          </View>
-          <View style={[styles.oddsPill, styles.oddsPillNo]}>
-            <Text style={styles.oddsPillLabel}>NO</Text>
-            <Text style={[styles.oddsPillValue, styles.oddsPillValueNo]}>
-              {under === null ? "—" : `${Math.round(under * 100)}%`}
-            </Text>
-          </View>
+      <View style={styles.oddsPills}>
+        <View style={[styles.oddsPill, styles.oddsPillYes]}>
+          <Text style={styles.oddsPillLabel}>YES</Text>
+          <Text style={[styles.oddsPillValue, styles.oddsPillValueYes]}>
+            {over === null ? "—" : `${Math.round(over * 100)}%`}
+          </Text>
+        </View>
+        <View style={[styles.oddsPill, styles.oddsPillNo]}>
+          <Text style={styles.oddsPillLabel}>NO</Text>
+          <Text style={[styles.oddsPillValue, styles.oddsPillValueNo]}>
+            {under === null ? "—" : `${Math.round(under * 100)}%`}
+          </Text>
         </View>
       </View>
 
@@ -333,40 +335,52 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     fontFamily: fontMedium,
   },
-  playerInfo: {
-    flex: 1,
-    gap: 6,
-  },
   playerName: {
+    flex: 1,
     color: colors.textPrimary,
     fontSize: 17,
     fontWeight: "700",
     fontFamily: fontMedium,
+    flexWrap: "wrap",
   },
-  linePill: {
-    alignSelf: "flex-start",
+  projectedRow: {
     backgroundColor: colors.surfaceRaised,
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 3,
+    borderRadius: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    flexDirection: "row",
+    alignItems: "baseline",
+    justifyContent: "space-between",
   },
-  linePillText: {
-    color: colors.textSecondary,
-    fontSize: 13,
-    fontWeight: "600",
+  projectedLabel: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: "700",
+    fontFamily: fontMedium,
+    letterSpacing: 0.5,
+  },
+  projectedValue: {
+    color: colors.textPrimary,
+    fontSize: 26,
+    fontWeight: "700",
     fontFamily: fontMedium,
     fontVariant: ["tabular-nums"],
+  },
+  projectedUnit: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.textSecondary,
   },
   oddsPills: {
     flexDirection: "row",
     gap: 8,
   },
   oddsPill: {
-    minWidth: 60,
+    flex: 1,
     alignItems: "center",
-    borderRadius: 999,
+    borderRadius: 6,
     borderWidth: 1.5,
-    paddingVertical: 8,
+    paddingVertical: 10,
     paddingHorizontal: 12,
   },
   oddsPillYes: {
