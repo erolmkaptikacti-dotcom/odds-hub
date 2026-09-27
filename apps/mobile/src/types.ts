@@ -49,3 +49,27 @@ export interface GamesResponse {
   reason?: string;
   updatedAt: number;
 }
+
+export interface PropLine {
+  label: string;
+  line: number | null;
+  overProbability: number | null;
+  sourceUrl: string;
+}
+
+export interface GameProps {
+  passing: PropLine[];
+  receiving: PropLine[];
+}
+
+export interface GamePropsResponse {
+  gameId: string;
+  sport: string;
+  teamA: string;
+  teamB: string;
+  polymarket: GameProps | null;
+  kalshi: GameProps | null;
+  demo: boolean;
+  reason?: string;
+  updatedAt: number;
+}

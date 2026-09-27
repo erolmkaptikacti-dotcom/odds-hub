@@ -3,33 +3,53 @@ import { Pressable, SafeAreaView, StatusBar, StyleSheet, Text, View } from "reac
 import { GAME_MATCHING_SPORTS, SPORTS } from "@/config";
 import { GamesView } from "@/components/GamesView";
 import { EventsView } from "@/components/EventsView";
+import { GameDetailScreen } from "@/components/GameDetailScreen";
 import { colors, fontMedium } from "@/theme";
+import type { GameOdds } from "@/types";
 
 export default function App() {
   const [sport, setSport] = useState<string>(SPORTS[0].key);
+  const [selectedGame, setSelectedGame] = useState<GameOdds | null>(null);
 
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="light-content" />
-      <View style={styles.headerRow}>
-        <Text style={styles.title}>OddsHub</Text>
-      </View>
 
-      <View style={styles.sportRow}>
-        {SPORTS.map((s) => (
-          <Pressable
-            key={s.key}
-            onPress={() => setSport(s.key)}
-            style={[styles.sportChip, sport === s.key && styles.sportChipActive]}
-          >
-            <Text style={[styles.sportChipText, sport === s.key && styles.sportChipTextActive]}>
-              {s.label}
-            </Text>
+      {selectedGame ? (
+        <View style={styles.headerRow}>
+          <Pressable onPress={() => setSelectedGame(null)} hitSlop={12}>
+            <Text style={styles.backLink}>‹ Back</Text>
           </Pressable>
-        ))}
-      </View>
+        </View>
+      ) : (
+        <>
+          <View style={styles.headerRow}>
+            <Text style={styles.title}>OddsHub</Text>
+          </View>
 
-      {GAME_MATCHING_SPORTS.has(sport) ? <GamesView sport={sport} /> : <EventsView sport={sport} />}
+          <View style={styles.sportRow}>
+            {SPORTS.map((s) => (
+              <Pressable
+                key={s.key}
+                onPress={() => setSport(s.key)}
+                style={[styles.sportChip, sport === s.key && styles.sportChipActive]}
+              >
+                <Text style={[styles.sportChipText, sport === s.key && styles.sportChipTextActive]}>
+                  {s.label}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </>
+      )}
+
+      {selectedGame ? (
+        <GameDetailScreen game={selectedGame} />
+      ) : GAME_MATCHING_SPORTS.has(sport) ? (
+        <GamesView sport={sport} onSelectGame={setSelectedGame} />
+      ) : (
+        <EventsView sport={sport} />
+      )}
     </SafeAreaView>
   );
 }
@@ -53,6 +73,12 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     fontFamily: fontMedium,
     letterSpacing: 0.5,
+  },
+  backLink: {
+    color: colors.textPrimary,
+    fontSize: 17,
+    fontWeight: "700",
+    fontFamily: fontMedium,
   },
   sportRow: {
     flexDirection: "row",

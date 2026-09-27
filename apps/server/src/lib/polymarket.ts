@@ -3,7 +3,8 @@
 // public gamma-api, which serves "events" (a game/matchup) each containing
 // one or more binary "markets" (Yes/No outcomes with a live price = implied
 // probability).
-import type { OddsEvent, OddsOutcome } from "./types";
+import type { OddsEvent, OddsOutcome, PropLine } from "./types";
+import type { NflTeam } from "./nflTeams";
 
 const GAMMA_API = "https://gamma-api.polymarket.com";
 
@@ -149,16 +150,89 @@ function mapEvent(raw: RawEvent, sport: string): OddsEvent | null {
   };
 }
 
-export async function fetchPolymarketEvents(sport: string): Promise<OddsEvent[]> {
-  const tag = POLYMARKET_SPORT_TAGS[sport];
-  if (!tag) return [];
-
+async function fetchPolymarketRawEvents(tag: string): Promise<RawEvent[]> {
   const url = `${GAMMA_API}/events?tag_slug=${tag}&active=true&closed=false&limit=50&order=volume&ascending=false`;
   const res = await fetch(url, { headers: { accept: "application/json" }, next: { revalidate: 30 } });
   if (!res.ok) throw new Error(`Polymarket ${res.status}`);
 
   const body = (await res.json()) as RawEvent[];
   if (!Array.isArray(body)) throw new Error("Unexpected Polymarket response shape");
+  return body;
+}
 
+export async function fetchPolymarketEvents(sport: string): Promise<OddsEvent[]> {
+  const tag = POLYMARKET_SPORT_TAGS[sport];
+  if (!tag) return [];
+
+  const body = await fetchPolymarketRawEvents(tag);
   return body.map((e) => mapEvent(e, sport)).filter((e): e is OddsEvent => e !== null);
+}
+
+// Player-prop question patterns. Unlike the moneyline, we don't try to
+// parse out a player's name or team — the market's own question already
+// names the player (e.g. "Josh Allen Over 275.5 Passing Yards?"), and we
+// have no roster database to reliably say which of the two teams they're
+// on, so props are returned as one list for the game rather than split
+// per team.
+const PASSING_YARDS_RE = /passing yards/i;
+const RECEIVING_YARDS_RE = /receiv\w* yards/i;
+const LINE_NUMBER_RE = /(\d+(?:\.\d+)?)/;
+
+function extractPropLine(market: RawMarket, eventUrl: string): PropLine | null {
+  const names = parseJsonArray(market.outcomes);
+  const prices = parseJsonArray(market.outcomePrices).map(Number);
+  if (names.length === 0 || prices.length !== names.length) return null;
+
+  const overIndex = names.findIndex((n) => /^(over|yes)$/i.test(n.trim()));
+  const overProbability = overIndex !== -1 ? prices[overIndex] : null;
+  const lineMatch = (market.question ?? "").match(LINE_NUMBER_RE);
+
+  return {
+    label: market.question ?? "Prop",
+    line: lineMatch ? Number(lineMatch[1]) : null,
+    overProbability,
+    sourceUrl: eventUrl,
+  };
+}
+
+function eventMentionsBothTeams(raw: RawEvent, teamA: NflTeam, teamB: NflTeam): boolean {
+  const text = `${raw.title ?? ""} ${raw.slug ?? ""}`.toLowerCase();
+  return text.includes(teamA.mascot.toLowerCase()) && text.includes(teamB.mascot.toLowerCase());
+}
+
+/**
+ * QB passing-yards and receiver receiving-yards prop lines for one game.
+ * Polymarket sometimes splits a game's props into a separate "event" from
+ * its moneyline (e.g. a "-player-props" suffixed one), so this scans every
+ * event mentioning both teams, not just the one mapEvent picked.
+ */
+export async function fetchPolymarketGameProps(
+  sport: string,
+  teamA: NflTeam,
+  teamB: NflTeam
+): Promise<{ passing: PropLine[]; receiving: PropLine[] }> {
+  const tag = POLYMARKET_SPORT_TAGS[sport];
+  if (!tag) return { passing: [], receiving: [] };
+
+  const events = await fetchPolymarketRawEvents(tag);
+  const matching = events.filter((e) => eventMentionsBothTeams(e, teamA, teamB));
+
+  const passing: PropLine[] = [];
+  const receiving: PropLine[] = [];
+
+  for (const event of matching) {
+    const eventUrl = `https://polymarket.com/event/${event.slug ?? event.id}`;
+    for (const market of event.markets ?? []) {
+      const question = market.question ?? "";
+      if (PASSING_YARDS_RE.test(question)) {
+        const line = extractPropLine(market, eventUrl);
+        if (line) passing.push(line);
+      } else if (RECEIVING_YARDS_RE.test(question)) {
+        const line = extractPropLine(market, eventUrl);
+        if (line) receiving.push(line);
+      }
+    }
+  }
+
+  return { passing: passing.slice(0, 6), receiving: receiving.slice(0, 8) };
 }

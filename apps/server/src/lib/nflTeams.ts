@@ -86,6 +86,10 @@ function extractTeamsFromTitle(title: string): [NflTeam, NflTeam] | null {
   return [a.team, b.team];
 }
 
+export function teamByAbbr(abbr: string): NflTeam | null {
+  return NFL_TEAMS.find((t) => t.abbr === abbr) ?? null;
+}
+
 /**
  * Identifies the two teams a moneyline-shaped event is about. This is also
  * the filter that separates real games from season-long futures/props:

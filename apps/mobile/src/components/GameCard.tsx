@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { GameOdds, GameSourceOdds } from "@/types";
 import { colors, font, fontMedium } from "@/theme";
 import { contrastText, teamStyle } from "@/lib/nflTeamStyles";
@@ -79,12 +79,12 @@ function SourceColumn({
   );
 }
 
-export function GameCard({ game }: { game: GameOdds }) {
+export function GameCard({ game, onPress }: { game: GameOdds; onPress?: () => void }) {
   const teamAColor = teamStyle(game.teamA).color;
   const teamBColor = teamStyle(game.teamB).color;
 
   return (
-    <View style={styles.cardWrap}>
+    <Pressable style={styles.cardWrap} onPress={onPress}>
       <View style={styles.splitBorder}>
         <View style={[styles.splitHalf, { backgroundColor: teamAColor }]} />
         <View style={[styles.splitHalf, { backgroundColor: teamBColor }]} />
@@ -117,7 +117,7 @@ export function GameCard({ game }: { game: GameOdds }) {
           />
         </View>
       </View>
-    </View>
+    </Pressable>
   );
 }
 

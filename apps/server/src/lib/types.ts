@@ -54,3 +54,33 @@ export interface GamesResponse {
   reason?: string;
   updatedAt: number;
 }
+
+// A single player prop line (QB passing yards, a receiver's receiving
+// yards). `label` is the market's own question text (it already names the
+// player, e.g. "Josh Allen Over 275.5 Passing Yards?") rather than a
+// separately-parsed player name — we can't reliably tell which team a
+// player is on from market text alone without a roster database, so props
+// are listed for the game as a whole rather than split under teamA/teamB.
+export interface PropLine {
+  label: string;
+  line: number | null;
+  overProbability: number | null;
+  sourceUrl: string;
+}
+
+export interface GameProps {
+  passing: PropLine[];
+  receiving: PropLine[];
+}
+
+export interface GamePropsResponse {
+  gameId: string;
+  sport: string;
+  teamA: string;
+  teamB: string;
+  polymarket: GameProps | null;
+  kalshi: GameProps | null;
+  demo: boolean;
+  reason?: string;
+  updatedAt: number;
+}

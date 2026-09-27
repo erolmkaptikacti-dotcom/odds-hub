@@ -1,7 +1,7 @@
 // Fallback data shown (clearly tagged) when a live source is unreachable,
 // so the app is always exercisable end-to-end even if an upstream API is
 // down or its shape has drifted.
-import type { OddsEvent, Source } from "./types";
+import type { GameProps, OddsEvent, Source } from "./types";
 
 const DEMO_MATCHUPS: Record<string, [string, string][]> = {
   nfl: [
@@ -35,4 +35,24 @@ export function generateDemoEvents(source: Source, sport: string): OddsEvent[] {
       sourceUrl: source === "polymarket" ? "https://polymarket.com" : "https://kalshi.com",
     };
   });
+}
+
+// Generic placeholder labels rather than guessed real player names — a
+// wrong real name shown under a "DEMO DATA" badge is still misinformation,
+// a made-up role name isn't.
+export function generateDemoProps(): GameProps {
+  return {
+    passing: [
+      { label: "Home Starting QB — Over 245.5 Passing Yards", line: 245.5, overProbability: 0.52, sourceUrl: "" },
+      { label: "Away Starting QB — Over 231.5 Passing Yards", line: 231.5, overProbability: 0.48, sourceUrl: "" },
+    ],
+    receiving: [
+      { label: "Home WR1 — Over 68.5 Receiving Yards", line: 68.5, overProbability: 0.55, sourceUrl: "" },
+      { label: "Home WR2 — Over 47.5 Receiving Yards", line: 47.5, overProbability: 0.5, sourceUrl: "" },
+      { label: "Home WR3 — Over 39.5 Receiving Yards", line: 39.5, overProbability: 0.46, sourceUrl: "" },
+      { label: "Away WR1 — Over 64.5 Receiving Yards", line: 64.5, overProbability: 0.53, sourceUrl: "" },
+      { label: "Away WR2 — Over 44.5 Receiving Yards", line: 44.5, overProbability: 0.49, sourceUrl: "" },
+      { label: "Away WR3 — Over 35.5 Receiving Yards", line: 35.5, overProbability: 0.45, sourceUrl: "" },
+    ],
+  };
 }
