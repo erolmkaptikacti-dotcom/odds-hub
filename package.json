@@ -1,0 +1,11 @@
+{
+  "name": "odds-hub",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "server:dev": "npm run dev --workspace=apps/server",
+    "mobile:start": "npm run start --workspace=apps/mobile"
+  }
+}

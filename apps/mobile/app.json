@@ -1,0 +1,20 @@
+{
+  "expo": {
+    "name": "OddsHub",
+    "slug": "odds-hub",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.oddshub.app"
+    },
+    "android": {
+      "package": "com.oddshub.app"
+    },
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}

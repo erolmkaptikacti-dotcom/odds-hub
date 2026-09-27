@@ -1,0 +1,9 @@
+node_modules/
+.expo/
+dist/
+.next/
+*.log
+.env
+.env.local
+.DS_Store
+*.tsbuildinfo
