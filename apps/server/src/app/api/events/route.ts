@@ -2,11 +2,14 @@ import { NextResponse } from "next/server";
 import { fetchSourceEvents, ALL_SOURCES } from "@/lib/fetchSource";
 import type { EventsResponse, Source } from "@/lib/types";
 
-// William Hill (via The Odds API) only has soccer wired up so far — keep it out
-// of every other sport's feed rather than showing an always-demo "William Hill"
-// entry there.
+// William Hill (via The Odds API) only has soccer wired up so far — keep it
+// out of every other sport's feed. Kalshi has no soccer series at all
+// (unlike NFL/NBA/MLB/NHL), so it's the reverse on Soccer: including it
+// there would only ever contribute a permanent demo placeholder and
+// falsely trip the whole feed's "demo" flag even when Polymarket and
+// William Hill are both fully live.
 const SOURCES_BY_SPORT: Partial<Record<string, Source[]>> = {
-  soccer: ALL_SOURCES,
+  soccer: ALL_SOURCES.filter((s) => s !== "kalshi"),
 };
 const DEFAULT_SOURCES: Source[] = ["polymarket", "kalshi"];
 
