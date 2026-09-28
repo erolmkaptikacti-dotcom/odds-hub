@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
 import type { OddsEvent } from "@/types";
 import { colors, font, fontMedium } from "@/theme";
+import { toAmericanOdds } from "@/lib/odds";
 
 const SOURCE_LABEL: Record<OddsEvent["source"], string> = {
   polymarket: "Polymarket",
@@ -30,7 +31,7 @@ export function EventCard({ event }: { event: OddsEvent }) {
             <Text style={styles.outcomeName} numberOfLines={1}>
               {o.name}
             </Text>
-            <Text style={styles.outcomeProb}>{Math.round(o.impliedProbability * 100)}%</Text>
+            <Text style={styles.outcomeProb}>{toAmericanOdds(o.impliedProbability)}</Text>
           </View>
         ))}
       </View>

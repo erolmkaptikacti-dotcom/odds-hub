@@ -6,6 +6,7 @@ import { useSlideTransition } from "@/hooks/useSlideTransition";
 import { colors, font, fontMedium } from "@/theme";
 import { sharedStyles } from "@/sharedStyles";
 import { contrastText, teamStyle, teamStyleByAbbr } from "@/lib/nflTeamStyles";
+import { toAmericanOdds } from "@/lib/odds";
 import type { GameOdds, GameProps, GamePropsResponse, PropCategory, PropLine } from "@/types";
 
 const SOURCE_BRAND_COLOR = {
@@ -125,15 +126,11 @@ function PlayerPropCard({ group }: { group: PlayerGroup }) {
       <View style={styles.oddsPills}>
         <View style={[styles.oddsPill, styles.oddsPillYes]}>
           <Text style={styles.oddsPillLabel}>YES</Text>
-          <Text style={[styles.oddsPillValue, styles.oddsPillValueYes]}>
-            {over === null ? "—" : `${Math.round(over * 100)}%`}
-          </Text>
+          <Text style={[styles.oddsPillValue, styles.oddsPillValueYes]}>{toAmericanOdds(over)}</Text>
         </View>
         <View style={[styles.oddsPill, styles.oddsPillNo]}>
           <Text style={styles.oddsPillLabel}>NO</Text>
-          <Text style={[styles.oddsPillValue, styles.oddsPillValueNo]}>
-            {under === null ? "—" : `${Math.round(under * 100)}%`}
-          </Text>
+          <Text style={[styles.oddsPillValue, styles.oddsPillValueNo]}>{toAmericanOdds(under)}</Text>
         </View>
       </View>
 

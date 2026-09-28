@@ -2,6 +2,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { GameOdds, GameSourceOdds } from "@/types";
 import { colors, font, fontMedium } from "@/theme";
 import { contrastText, teamStyle } from "@/lib/nflTeamStyles";
+import { toAmericanOdds } from "@/lib/odds";
 
 function formatKickoff(iso: string | null): string {
   if (!iso) return "TIME TBD";
@@ -17,10 +18,6 @@ function formatKickoff(iso: string | null): string {
   } catch {
     return "TIME TBD";
   }
-}
-
-function pct(v: number | null): string {
-  return v === null ? "—" : `${Math.round(v * 100)}%`;
 }
 
 // Each platform's own brand color, used for its column heading.
@@ -78,7 +75,7 @@ function SourceColumn({
           <View style={[styles.sourceDot, { backgroundColor: teamAStyle.color }]} />
           <Text style={styles.sourceAbbr}>{teamAStyle.abbr}</Text>
           <Text style={[styles.sourceProb, !odds && styles.sourceProbMissing]}>
-            {pct(odds?.teamAProbability ?? null)}
+            {toAmericanOdds(odds?.teamAProbability ?? null)}
           </Text>
         </View>
         <ProbBar probability={odds?.teamAProbability ?? null} color={teamAStyle.color} />
@@ -88,7 +85,7 @@ function SourceColumn({
           <View style={[styles.sourceDot, { backgroundColor: teamBStyle.color }]} />
           <Text style={styles.sourceAbbr}>{teamBStyle.abbr}</Text>
           <Text style={[styles.sourceProb, !odds && styles.sourceProbMissing]}>
-            {pct(odds?.teamBProbability ?? null)}
+            {toAmericanOdds(odds?.teamBProbability ?? null)}
           </Text>
         </View>
         <ProbBar probability={odds?.teamBProbability ?? null} color={teamBStyle.color} />
