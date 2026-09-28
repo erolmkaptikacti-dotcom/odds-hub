@@ -59,7 +59,6 @@ export default function App() {
               persistentScrollbar
               indicatorStyle="white"
               contentContainerStyle={styles.leagueRow}
-              style={styles.leagueScroller}
             >
               {SOCCER_LEAGUES.map((l) => (
                 <OutlineBubble key={l.id} label={l.label} active={league === l.id} onPress={() => setLeague(l.id)} />
@@ -137,9 +136,6 @@ const styles = StyleSheet.create({
   sportChipTextActive: {
     color: colors.invertedText,
   },
-  leagueScroller: {
-    marginBottom: 4,
-  },
   leagueRow: {
     flexDirection: "row",
     // Horizontal ScrollView children stretch to fill the cross-axis
@@ -149,6 +145,6 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     gap: 10,
     paddingHorizontal: 16,
-    paddingBottom: 18, // room for the scrollbar riding along the bottom edge
+    paddingBottom: 8, // just enough room for the scrollbar riding the bottom edge
   },
 });

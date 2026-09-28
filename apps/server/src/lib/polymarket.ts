@@ -5,7 +5,7 @@
 // probability).
 import type { GameProps, OddsEvent, OddsOutcome, PropCategory, PropLine } from "./types";
 import type { NflTeam } from "./nflTeams";
-import { leagueById } from "./soccerLeagues";
+import { leagueById, type SoccerLeague } from "./soccerLeagues";
 
 const GAMMA_API = "https://gamma-api.polymarket.com";
 
@@ -161,23 +161,39 @@ async function fetchPolymarketRawEvents(tag: string): Promise<RawEvent[]> {
   return body;
 }
 
+/** Splits "Team A vs Team B" into its two sides; null if the title isn't shaped that way. */
+function splitVersusTitle(title: string): [string, string] | null {
+  const parts = title.split(/\s+vs\.?\s+/i);
+  return parts.length === 2 ? [parts[0], parts[1]] : null;
+}
+
+function matchesEvent(raw: RawEvent, league: SoccerLeague): boolean {
+  const title = raw.title ?? "";
+  const slug = raw.slug ?? "";
+
+  if (league.polymarketSlugPrefixes) {
+    return league.polymarketSlugPrefixes.some((p) => slug.startsWith(p));
+  }
+  if (league.polymarketTitleKeywords) {
+    const text = `${title} ${slug}`.toLowerCase();
+    return league.polymarketTitleKeywords.some((k) => text.includes(k));
+  }
+  if (league.polymarketTeams) {
+    const sides = splitVersusTitle(title);
+    if (!sides) return false;
+    const teams = league.polymarketTeams.map((t) => t.toLowerCase());
+    return sides.every((side) => teams.some((t) => side.toLowerCase().includes(t)));
+  }
+  return false;
+}
+
 export async function fetchPolymarketEvents(sport: string, leagueId: string | null = null): Promise<OddsEvent[]> {
   const tag = POLYMARKET_SPORT_TAGS[sport];
   if (!tag) return [];
 
   const body = await fetchPolymarketRawEvents(tag);
-  let filtered = body;
-
-  // Only apply a league filter when we have a confirmed slug prefix for
-  // it (see soccerLeagues.ts) — an unverified one would hide real games
-  // that are just worded differently, which is worse than showing
-  // everything.
-  if (sport === "soccer" && leagueId) {
-    const prefixes = leagueById(leagueId).polymarketSlugPrefixes;
-    if (prefixes) {
-      filtered = body.filter((e) => e.slug && prefixes.some((p) => e.slug!.startsWith(p)));
-    }
-  }
+  const league = sport === "soccer" && leagueId ? leagueById(leagueId) : null;
+  const filtered = league ? body.filter((e) => matchesEvent(e, league)) : body;
 
   return filtered.map((e) => mapEvent(e, sport)).filter((e): e is OddsEvent => e !== null);
 }

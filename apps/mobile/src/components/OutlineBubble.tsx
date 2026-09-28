@@ -1,12 +1,10 @@
 import { Pressable, StyleSheet, Text } from "react-native";
 import { colors, fontMedium } from "@/theme";
 
-// "Hollow" letters — filled to match the page background, with a teal
-// glow/outline around each one — using a single Text's textShadow rather
-// than stacking several offset copies (which was fragile: it let each
-// bubble's measured size balloon unpredictably). A shadow with no offset
-// and a small radius reads as an outline hugging the letters, at zero
-// layout risk.
+// White letters with a teal glow/outline around each one — a single
+// Text's textShadow (no offset, small radius) rather than stacking
+// several offset copies (which was fragile: it let each bubble's
+// measured size balloon unpredictably).
 export function OutlineBubble({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
   return (
     <Pressable onPress={onPress} style={[styles.bubble, active && styles.bubbleActive]}>
@@ -31,12 +29,12 @@ const styles = StyleSheet.create({
     borderWidth: 2.5,
   },
   label: {
-    fontSize: 17,
+    fontSize: 19,
     fontWeight: "800",
     fontFamily: fontMedium,
-    color: colors.bg,
+    color: "#ffffff",
     textShadowColor: colors.accent,
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 2.5,
+    textShadowRadius: 3,
   },
 });
