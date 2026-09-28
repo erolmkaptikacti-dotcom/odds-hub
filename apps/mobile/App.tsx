@@ -58,6 +58,7 @@ export default function App() {
               showsHorizontalScrollIndicator
               persistentScrollbar
               indicatorStyle="white"
+              style={styles.leagueScroll}
               contentContainerStyle={styles.leagueRow}
             >
               {SOCCER_LEAGUES.map((l) => (
@@ -135,6 +136,15 @@ const styles = StyleSheet.create({
   },
   sportChipTextActive: {
     color: colors.invertedText,
+  },
+  leagueScroll: {
+    // A ScrollView with no explicit height stretches to fill whatever
+    // flexible vertical space its parent gives it (here, the leftover
+    // room above the flex:1 games list below) instead of sizing to its
+    // one row of bubbles — that's the real source of the large empty
+    // gap, not the row's own padding. Pinning a height fixes it.
+    flexGrow: 0,
+    height: 64,
   },
   leagueRow: {
     flexDirection: "row",

@@ -21,10 +21,25 @@ export async function fetchSourceEvents(
 ): Promise<EventsResponse> {
   const sport = sportParam && isSupportedSport(sportParam) ? sportParam : "nfl";
 
+  // Polymarket's soccer coverage genuinely doesn't include every league
+  // (e.g. it may have Nations League/MLS games but nothing from a given
+  // domestic league this week) — that's not a fetch failure, it's an
+  // accurate "nothing here" for that league. Falling back to the generic
+  // single-matchup demo data in that case doesn't even match the
+  // selected league (it's always the same hardcoded pair), so it reads
+  // as real-but-wrong data instead of an honest empty result. Only
+  // Polymarket + soccer + a specific league selected skips the fallback;
+  // every other source/sport combo keeps demo data so the app never
+  // looks broken when a real fetch fails.
+  const skipDemoFallback = source === "polymarket" && sport === "soccer" && !!league;
+
   try {
     const events = await FETCHERS[source](sport, league);
     if (events.length > 0) {
       return { events, demo: false, updatedAt: Date.now() };
+    }
+    if (skipDemoFallback) {
+      return { events: [], demo: false, updatedAt: Date.now() };
     }
     return {
       events: generateDemoEvents(source, sport),
