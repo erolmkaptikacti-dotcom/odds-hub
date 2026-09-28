@@ -84,37 +84,39 @@ export function GameCard({ game, onPress }: { game: GameOdds; onPress?: () => vo
   const teamBColor = teamStyle(game.teamB).color;
 
   return (
-    <Pressable style={styles.cardWrap} onPress={onPress}>
-      <View style={styles.splitBorder}>
-        <View style={[styles.splitHalf, { backgroundColor: teamAColor }]} />
-        <View style={[styles.splitHalf, { backgroundColor: teamBColor }]} />
-      </View>
-
-      <View style={styles.card}>
-        <View style={styles.matchupRow}>
-          <TeamBadge name={game.teamA} align="left" />
-          <Text style={styles.kickoff}>{formatKickoff(game.kickoff)}</Text>
-          <TeamBadge name={game.teamB} align="right" />
+    <Pressable style={styles.shadowWrap} onPress={onPress}>
+      <View style={styles.cardWrap}>
+        <View style={styles.splitBorder}>
+          <View style={[styles.splitHalf, { backgroundColor: teamAColor }]} />
+          <View style={[styles.splitHalf, { backgroundColor: teamBColor }]} />
         </View>
 
-        <View style={styles.divider} />
+        <View style={styles.card}>
+          <View style={styles.matchupRow}>
+            <TeamBadge name={game.teamA} align="left" />
+            <Text style={styles.kickoff}>{formatKickoff(game.kickoff)}</Text>
+            <TeamBadge name={game.teamB} align="right" />
+          </View>
 
-        <View style={styles.sourcesRow}>
-          <SourceColumn
-            label="POLYMARKET"
-            brandColor={SOURCE_BRAND_COLOR.polymarket}
-            odds={game.polymarket}
-            teamA={game.teamA}
-            teamB={game.teamB}
-          />
-          <View style={styles.sourcesGap} />
-          <SourceColumn
-            label="KALSHI"
-            brandColor={SOURCE_BRAND_COLOR.kalshi}
-            odds={game.kalshi}
-            teamA={game.teamA}
-            teamB={game.teamB}
-          />
+          <View style={styles.divider} />
+
+          <View style={styles.sourcesRow}>
+            <SourceColumn
+              label="POLYMARKET"
+              brandColor={SOURCE_BRAND_COLOR.polymarket}
+              odds={game.polymarket}
+              teamA={game.teamA}
+              teamB={game.teamB}
+            />
+            <View style={styles.sourcesGap} />
+            <SourceColumn
+              label="KALSHI"
+              brandColor={SOURCE_BRAND_COLOR.kalshi}
+              odds={game.kalshi}
+              teamA={game.teamA}
+              teamB={game.teamB}
+            />
+          </View>
         </View>
       </View>
     </Pressable>
@@ -122,15 +124,27 @@ export function GameCard({ game, onPress }: { game: GameOdds; onPress?: () => vo
 }
 
 const BORDER_HEIGHT = 5;
+const CARD_RADIUS = 18;
 
 const styles = StyleSheet.create({
-  cardWrap: {
+  // Separate from cardWrap because overflow:hidden (needed to clip the
+  // split-color bar to the rounded corners) also clips iOS shadows —
+  // this outer view carries the shadow, the inner one the clipping.
+  shadowWrap: {
     marginHorizontal: 16,
     marginVertical: 6,
-    borderRadius: 2,
+    borderRadius: CARD_RADIUS,
+    shadowColor: colors.accent,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.16,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  cardWrap: {
+    borderRadius: CARD_RADIUS,
     overflow: "hidden",
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderWidth: 1.5,
+    borderColor: colors.accent,
   },
   splitBorder: {
     flexDirection: "row",
@@ -140,7 +154,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   card: {
-    backgroundColor: colors.surface,
+    // Translucent instead of a solid fill, so the gray page background
+    // shows through slightly — a "glass" card instead of a flat block.
+    backgroundColor: "rgba(255,255,255,0.4)",
     padding: 16,
   },
   matchupRow: {
