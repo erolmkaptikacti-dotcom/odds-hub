@@ -43,6 +43,18 @@ function TeamBadge({ name, align }: { name: string; align: "left" | "right" }) {
   );
 }
 
+function ProbBar({ probability, color }: { probability: number | null; color: string }) {
+  // flex-based fill instead of a percentage width string, so both bars in
+  // a source share one scale and stay directly comparable at a glance.
+  const filled = probability === null ? 0 : Math.max(probability * 100, probability > 0 ? 4 : 0);
+  return (
+    <View style={styles.probBarTrack}>
+      <View style={[styles.probBarFill, { flex: filled, backgroundColor: color }]} />
+      <View style={{ flex: 100 - filled }} />
+    </View>
+  );
+}
+
 function SourceColumn({
   label,
   brandColor,
@@ -61,19 +73,25 @@ function SourceColumn({
   return (
     <View style={styles.sourceColumn}>
       <Text style={[styles.sourceLabel, { color: brandColor }]}>{label}</Text>
-      <View style={styles.sourceRow}>
-        <View style={[styles.sourceDot, { backgroundColor: teamAStyle.color }]} />
-        <Text style={styles.sourceAbbr}>{teamAStyle.abbr}</Text>
-        <Text style={[styles.sourceProb, !odds && styles.sourceProbMissing]}>
-          {pct(odds?.teamAProbability ?? null)}
-        </Text>
+      <View style={styles.sourceEntry}>
+        <View style={styles.sourceRow}>
+          <View style={[styles.sourceDot, { backgroundColor: teamAStyle.color }]} />
+          <Text style={styles.sourceAbbr}>{teamAStyle.abbr}</Text>
+          <Text style={[styles.sourceProb, !odds && styles.sourceProbMissing]}>
+            {pct(odds?.teamAProbability ?? null)}
+          </Text>
+        </View>
+        <ProbBar probability={odds?.teamAProbability ?? null} color={teamAStyle.color} />
       </View>
-      <View style={styles.sourceRow}>
-        <View style={[styles.sourceDot, { backgroundColor: teamBStyle.color }]} />
-        <Text style={styles.sourceAbbr}>{teamBStyle.abbr}</Text>
-        <Text style={[styles.sourceProb, !odds && styles.sourceProbMissing]}>
-          {pct(odds?.teamBProbability ?? null)}
-        </Text>
+      <View style={styles.sourceEntry}>
+        <View style={styles.sourceRow}>
+          <View style={[styles.sourceDot, { backgroundColor: teamBStyle.color }]} />
+          <Text style={styles.sourceAbbr}>{teamBStyle.abbr}</Text>
+          <Text style={[styles.sourceProb, !odds && styles.sourceProbMissing]}>
+            {pct(odds?.teamBProbability ?? null)}
+          </Text>
+        </View>
+        <ProbBar probability={odds?.teamBProbability ?? null} color={teamBStyle.color} />
       </View>
     </View>
   );
@@ -85,7 +103,7 @@ export function GameCard({ game, onPress }: { game: GameOdds; onPress?: () => vo
 
   return (
     <Pressable style={styles.shadowWrap} onPress={onPress}>
-      <View style={styles.cardWrap}>
+      <View style={[styles.cardWrap, { borderLeftColor: teamAColor, borderRightColor: teamBColor }]}>
         <View style={styles.splitBorder}>
           <View style={[styles.splitHalf, { backgroundColor: teamAColor }]} />
           <View style={[styles.splitHalf, { backgroundColor: teamBColor }]} />
@@ -118,6 +136,11 @@ export function GameCard({ game, onPress }: { game: GameOdds; onPress?: () => vo
             />
           </View>
         </View>
+
+        <View style={styles.splitBorder}>
+          <View style={[styles.splitHalf, { backgroundColor: teamAColor }]} />
+          <View style={[styles.splitHalf, { backgroundColor: teamBColor }]} />
+        </View>
       </View>
     </Pressable>
   );
@@ -143,8 +166,14 @@ const styles = StyleSheet.create({
   cardWrap: {
     borderRadius: CARD_RADIUS,
     overflow: "hidden",
-    borderWidth: 1.5,
-    borderColor: colors.accent,
+    borderTopWidth: 0,
+    borderBottomWidth: 0,
+    borderLeftWidth: 3,
+    borderRightWidth: 3,
+    // borderLeftColor/borderRightColor set per-game (each team's real
+    // color) — left half of the outline in teamA's color, right half in
+    // teamB's; the split bars above/below fill in the top/bottom edges
+    // to complete the outline.
   },
   splitBorder: {
     flexDirection: "row",
@@ -183,9 +212,10 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   badgeName: {
-    color: colors.textSecondary,
-    fontSize: 11,
-    fontFamily: font,
+    color: colors.textPrimary,
+    fontSize: 12,
+    fontWeight: "800",
+    fontFamily: fontMedium,
     maxWidth: 100,
   },
   kickoff: {
@@ -219,10 +249,23 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
     marginBottom: 6,
   },
+  sourceEntry: {
+    gap: 4,
+  },
   sourceRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
+  },
+  probBarTrack: {
+    flexDirection: "row",
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: colors.surfaceRaised,
+    overflow: "hidden",
+  },
+  probBarFill: {
+    borderRadius: 3,
   },
   sourceDot: {
     width: 8,
