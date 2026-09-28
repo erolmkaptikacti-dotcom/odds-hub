@@ -48,6 +48,19 @@ export function teamStyle(name: string): NflTeamStyle {
   return NFL_TEAM_STYLES[name] ?? FALLBACK;
 }
 
+// Sleeper's player data (apps/server/src/lib/sleeper.ts) gives us each
+// player's team as a bare abbreviation, not the full name teamStyle keys
+// on — build a reverse lookup once, with a couple of aliases for
+// abbreviations some sources use differently (e.g. "WSH" vs "WAS").
+const ABBR_ALIASES: Record<string, string> = { JAC: "JAX", WSH: "WAS" };
+const STYLE_BY_ABBR: Record<string, NflTeamStyle> = {};
+for (const style of Object.values(NFL_TEAM_STYLES)) STYLE_BY_ABBR[style.abbr] = style;
+
+export function teamStyleByAbbr(abbr: string | undefined): NflTeamStyle | null {
+  if (!abbr) return null;
+  return STYLE_BY_ABBR[ABBR_ALIASES[abbr] ?? abbr] ?? null;
+}
+
 /** Black or white, whichever reads better on a given team color (e.g. Steelers gold needs black, Ravens purple needs white). */
 export function contrastText(hex: string): string {
   const c = hex.replace("#", "");

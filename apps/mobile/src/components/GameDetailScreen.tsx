@@ -5,6 +5,7 @@ import { usePolledFetch } from "@/hooks/usePolledFetch";
 import { useSlideTransition } from "@/hooks/useSlideTransition";
 import { colors, font, fontMedium } from "@/theme";
 import { sharedStyles } from "@/sharedStyles";
+import { contrastText, teamStyle, teamStyleByAbbr } from "@/lib/nflTeamStyles";
 import type { GameOdds, GameProps, GamePropsResponse, PropCategory, PropLine } from "@/types";
 
 const SOURCE_BRAND_COLOR = {
@@ -42,6 +43,7 @@ function initials(name: string): string {
 interface PlayerGroup {
   name: string;
   headshotUrl?: string;
+  team?: string;
   lines: PropLine[];
 }
 
@@ -57,25 +59,32 @@ function groupByPlayer(props: PropLine[]): PlayerGroup[] {
   }
   return order.map((name) => {
     const lines = [...byName.get(name)!].sort((a, b) => (a.line ?? 0) - (b.line ?? 0));
-    return { name, headshotUrl: lines.find((l) => l.headshotUrl)?.headshotUrl, lines };
+    return {
+      name,
+      headshotUrl: lines.find((l) => l.headshotUrl)?.headshotUrl,
+      team: lines.find((l) => l.team)?.team,
+      lines,
+    };
   });
 }
 
-/** A real headshot when we have one (via Sleeper), falling back to colored initials otherwise — including if the image itself fails to load. */
-function PlayerAvatar({ name, headshotUrl }: { name: string; headshotUrl?: string }) {
+/** A real headshot when we have one (via Sleeper), falling back to a colored-initials avatar (in the player's real team color, when known) otherwise — including if the image itself fails to load. */
+function PlayerAvatar({ name, headshotUrl, accentColor }: { name: string; headshotUrl?: string; accentColor: string }) {
   const [errored, setErrored] = useState(false);
   if (headshotUrl && !errored) {
     return (
-      <Image
-        source={{ uri: headshotUrl }}
-        style={styles.avatar}
-        onError={() => setErrored(true)}
-        accessibilityLabel={name}
-      />
+      <View style={[styles.avatarRing, { borderColor: accentColor }]}>
+        <Image
+          source={{ uri: headshotUrl }}
+          style={styles.avatar}
+          onError={() => setErrored(true)}
+          accessibilityLabel={name}
+        />
+      </View>
     );
   }
   return (
-    <View style={[styles.avatar, { backgroundColor: hashColor(name) }]}>
+    <View style={[styles.avatar, { backgroundColor: accentColor }]}>
       <Text style={styles.avatarText}>{initials(name)}</Text>
     </View>
   );
@@ -88,11 +97,19 @@ function PlayerPropCard({ group }: { group: PlayerGroup }) {
   const over = active.overProbability;
   const under = over === null ? null : 1 - over;
 
+  const teamInfo = teamStyleByAbbr(group.team);
+  const accentColor = teamInfo?.color ?? hashColor(group.name);
+
   return (
-    <View style={styles.playerCard}>
+    <View style={[styles.playerCard, { borderLeftColor: accentColor }]}>
       <View style={styles.playerRow}>
-        <PlayerAvatar name={group.name} headshotUrl={group.headshotUrl} />
+        <PlayerAvatar name={group.name} headshotUrl={group.headshotUrl} accentColor={accentColor} />
         <Text style={styles.playerName}>{group.name}</Text>
+        {teamInfo && (
+          <View style={[styles.teamChip, { backgroundColor: teamInfo.color }]}>
+            <Text style={[styles.teamChipText, { color: contrastText(teamInfo.color) }]}>{teamInfo.abbr}</Text>
+          </View>
+        )}
       </View>
 
       {active.line !== null && (
@@ -173,8 +190,16 @@ export function GameDetailScreen({ game }: { game: GameOdds }) {
 
   const empty: GameProps = { anytimeTd: [], passing: [], rushing: [], receiving: [] };
 
+  const teamAColor = teamStyle(game.teamA).color;
+  const teamBColor = teamStyle(game.teamB).color;
+
   return (
     <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+      <View style={styles.splitBorder}>
+        <View style={[styles.splitHalf, { backgroundColor: teamAColor }]} />
+        <View style={[styles.splitHalf, { backgroundColor: teamBColor }]} />
+      </View>
+
       <View style={styles.header}>
         <Text style={styles.matchup}>
           {game.teamA} <Text style={styles.at}>@</Text> {game.teamB}
@@ -236,7 +261,16 @@ export function GameDetailScreen({ game }: { game: GameOdds }) {
   );
 }
 
+const BORDER_HEIGHT = 5;
+
 const styles = StyleSheet.create({
+  splitBorder: {
+    flexDirection: "row",
+    height: BORDER_HEIGHT,
+  },
+  splitHalf: {
+    flex: 1,
+  },
   header: {
     paddingHorizontal: 16,
     paddingTop: 8,
@@ -323,7 +357,9 @@ const styles = StyleSheet.create({
   playerCard: {
     backgroundColor: colors.surface,
     borderRadius: 20,
+    borderLeftWidth: 4,
     padding: 14,
+    paddingLeft: 12,
     marginBottom: 12,
     gap: 12,
   },
@@ -336,6 +372,14 @@ const styles = StyleSheet.create({
     width: 46,
     height: 46,
     borderRadius: 23,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatarRing: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    borderWidth: 2,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -352,6 +396,17 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     fontFamily: fontMedium,
     flexWrap: "wrap",
+  },
+  teamChip: {
+    borderRadius: 4,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+  },
+  teamChipText: {
+    fontSize: 11,
+    fontWeight: "800",
+    fontFamily: fontMedium,
+    letterSpacing: 0.3,
   },
   projectedRow: {
     backgroundColor: colors.surfaceRaised,
