@@ -221,19 +221,14 @@ function eventMentionsBothTeams(raw: RawEvent, teamA: NflTeam, teamB: NflTeam): 
   return text.includes(teamA.mascot.toLowerCase()) && text.includes(teamB.mascot.toLowerCase());
 }
 
-const CATEGORY_CAP: Record<PropCategory, number> = {
-  anytimeTd: 12,
-  passing: 6,
-  rushing: 10,
-  receiving: 12,
-};
-
 /**
  * Anytime-touchdown, passing/rushing/receiving-yards prop lines for one
- * game, bucketed by category. Polymarket sometimes splits a game's props
- * into a separate "event" from its moneyline (e.g. a "-player-props"
- * suffixed one), so this scans every event mentioning both teams, not
- * just the one mapEvent picked.
+ * game, bucketed by category — every player and every alternate line
+ * Polymarket has, uncapped (this is a few KB of text even for 100+
+ * lines, so there's no real cost to keeping all of it). Polymarket
+ * sometimes splits a game's props into a separate "event" from its
+ * moneyline (e.g. a "-player-props" suffixed one), so this scans every
+ * event mentioning both teams, not just the one mapEvent picked.
  */
 export async function fetchPolymarketGameProps(sport: string, teamA: NflTeam, teamB: NflTeam): Promise<GameProps> {
   const result: GameProps = { anytimeTd: [], passing: [], rushing: [], receiving: [] };
@@ -255,8 +250,5 @@ export async function fetchPolymarketGameProps(sport: string, teamA: NflTeam, te
     }
   }
 
-  for (const category of Object.keys(result) as PropCategory[]) {
-    result[category] = result[category].slice(0, CATEGORY_CAP[category]);
-  }
   return result;
 }
