@@ -1,4 +1,5 @@
 import { FlatList, RefreshControl, StyleSheet, Text, View } from "react-native";
+import type { NativeScrollEvent, NativeSyntheticEvent } from "react-native";
 import { API_BASE_URL, POLL_INTERVAL_MS } from "@/config";
 import { usePolledFetch } from "@/hooks/usePolledFetch";
 import { GameCard } from "@/components/GameCard";
@@ -7,7 +8,17 @@ import { sharedStyles } from "@/sharedStyles";
 import type { GameOdds, GamesResponse } from "@/types";
 
 /** The per-game moneyline slate (Polymarket + Kalshi side by side), used for sports with a team-matchup market. */
-export function GamesView({ sport, onSelectGame }: { sport: string; onSelectGame: (game: GameOdds) => void }) {
+export function GamesView({
+  sport,
+  onSelectGame,
+  onScroll,
+  contentBottomPadding = 24,
+}: {
+  sport: string;
+  onSelectGame: (game: GameOdds) => void;
+  onScroll?: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
+  contentBottomPadding?: number;
+}) {
   const { data, error, loading, refreshing, refresh } = usePolledFetch<GamesResponse>(
     `${API_BASE_URL}/api/games?sport=${sport}`,
     POLL_INTERVAL_MS
@@ -44,8 +55,10 @@ export function GamesView({ sport, onSelectGame }: { sport: string; onSelectGame
         data={data?.games ?? []}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => <GameCard game={item} onPress={() => onSelectGame(item)} />}
-        contentContainerStyle={{ paddingVertical: 8, paddingBottom: 24 }}
+        contentContainerStyle={{ paddingVertical: 8, paddingBottom: contentBottomPadding }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.textPrimary} />}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
       />
     </>
   );

@@ -19,6 +19,9 @@ export const colors = {
   invertedBg: "#0f9b8e", // active/selected pill fill (teal, not stark invert)
   invertedText: "#ffffff",
   error: "#c0392b",
+  tabBarBg: "#35373c", // slightly darker than the page bg so the bottom bar reads as its own surface
+  tabBarBorder: "rgba(255,255,255,0.08)",
+  tabBarInactive: "#8a8a90",
 };
 
 export const font = undefined; // platform default: San Francisco (iOS) / Roboto (Android)

@@ -1,4 +1,5 @@
 import { FlatList, RefreshControl, StyleSheet, Text, View } from "react-native";
+import type { NativeScrollEvent, NativeSyntheticEvent } from "react-native";
 import { API_BASE_URL, POLL_INTERVAL_MS } from "@/config";
 import { usePolledFetch } from "@/hooks/usePolledFetch";
 import { EventCard } from "@/components/EventCard";
@@ -7,7 +8,17 @@ import { sharedStyles } from "@/sharedStyles";
 import type { EventsResponse } from "@/types";
 
 /** One card per source per market — used for sports we haven't built game-matching for yet. */
-export function EventsView({ sport, league }: { sport: string; league?: string }) {
+export function EventsView({
+  sport,
+  league,
+  onScroll,
+  contentBottomPadding = 24,
+}: {
+  sport: string;
+  league?: string;
+  onScroll?: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
+  contentBottomPadding?: number;
+}) {
   const url = league
     ? `${API_BASE_URL}/api/events?sport=${sport}&league=${league}`
     : `${API_BASE_URL}/api/events?sport=${sport}`;
@@ -44,8 +55,10 @@ export function EventsView({ sport, league }: { sport: string; league?: string }
         data={data?.events ?? []}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => <EventCard event={item} />}
-        contentContainerStyle={{ paddingVertical: 8, paddingBottom: 24 }}
+        contentContainerStyle={{ paddingVertical: 8, paddingBottom: contentBottomPadding }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.textPrimary} />}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
       />
     </>
   );

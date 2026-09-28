@@ -5,7 +5,10 @@ import { GamesView } from "@/components/GamesView";
 import { EventsView } from "@/components/EventsView";
 import { GameDetailScreen } from "@/components/GameDetailScreen";
 import { OutlineBubble } from "@/components/OutlineBubble";
+import { BottomTabBar, TAB_BAR_HEIGHT, type BottomTab } from "@/components/BottomTabBar";
+import { PlaceholderScreen } from "@/components/PlaceholderScreen";
 import { useSlideTransition } from "@/hooks/useSlideTransition";
+import { useHideOnScroll } from "@/hooks/useHideOnScroll";
 import { colors, fontMedium } from "@/theme";
 import type { GameOdds } from "@/types";
 
@@ -14,13 +17,28 @@ import type { GameOdds } from "@/types";
 // switching sports slides left/right based on their order in SPORTS.
 const SCREEN_ORDER = [...SPORTS.map((s) => `list:${s.key}`), "detail"];
 
+const TAB_TITLES: Record<Exclude<BottomTab, "home">, string> = {
+  live: "Live",
+  account: "Account",
+  settings: "Settings",
+};
+
 export default function App() {
   const [sport, setSport] = useState<string>(SPORTS[0].key);
   const [league, setLeague] = useState<string>(SOCCER_LEAGUES[0].id);
   const [selectedGame, setSelectedGame] = useState<GameOdds | null>(null);
+  const [bottomTab, setBottomTab] = useState<BottomTab>("home");
 
   const activeKey = selectedGame ? "detail" : `list:${sport}`;
   const slideStyle = useSlideTransition(activeKey, SCREEN_ORDER);
+  const { translateY, onScroll, show } = useHideOnScroll(TAB_BAR_HEIGHT);
+
+  const handleSelectTab = (tab: BottomTab) => {
+    show();
+    setBottomTab(tab);
+  };
+
+  const listBottomPadding = TAB_BAR_HEIGHT + 16;
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -32,7 +50,7 @@ export default function App() {
             <Text style={styles.backLink}>‹ Back</Text>
           </Pressable>
         </View>
-      ) : (
+      ) : bottomTab === "home" ? (
         <>
           <View style={styles.headerRow}>
             <Text style={styles.title}>OddsHub</Text>
@@ -67,17 +85,39 @@ export default function App() {
             </ScrollView>
           )}
         </>
+      ) : (
+        <View style={styles.headerRow}>
+          <Text style={styles.title}>{TAB_TITLES[bottomTab]}</Text>
+        </View>
       )}
 
       <Animated.View style={[{ flex: 1 }, slideStyle]}>
         {selectedGame ? (
           <GameDetailScreen game={selectedGame} />
+        ) : bottomTab === "live" ? (
+          <PlaceholderScreen icon="radio-outline" title="No live games right now" message="Games in progress will show up here." />
+        ) : bottomTab === "account" ? (
+          <PlaceholderScreen icon="person-circle-outline" title="Account" message="Sign in to save your favorite teams and leagues." />
+        ) : bottomTab === "settings" ? (
+          <PlaceholderScreen icon="settings-outline" title="Settings" message="App preferences will live here." />
         ) : GAME_MATCHING_SPORTS.has(sport) ? (
-          <GamesView sport={sport} onSelectGame={setSelectedGame} />
+          <GamesView
+            sport={sport}
+            onSelectGame={setSelectedGame}
+            onScroll={onScroll}
+            contentBottomPadding={listBottomPadding}
+          />
         ) : (
-          <EventsView sport={sport} league={sport === "soccer" ? league : undefined} />
+          <EventsView
+            sport={sport}
+            league={sport === "soccer" ? league : undefined}
+            onScroll={onScroll}
+            contentBottomPadding={listBottomPadding}
+          />
         )}
       </Animated.View>
+
+      {!selectedGame && <BottomTabBar active={bottomTab} onSelect={handleSelectTab} translateY={translateY} />}
     </SafeAreaView>
   );
 }
