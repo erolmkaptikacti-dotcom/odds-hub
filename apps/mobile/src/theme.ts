@@ -1,23 +1,24 @@
-// Charcoal-grey theme — no color accents, just grey/white and typography/
-// spacing to carry hierarchy. Uses each platform's own default system font
-// (San Francisco on iOS, Roboto on Android) rather than Helvetica Neue —
-// it's what most modern fintech/prediction apps actually render in, and it
-// reads noticeably less "stiff" than Helvetica at the same sizes. Zero
-// extra dependencies (no font files to bundle, no version drift to manage).
+// Light theme: light-gray surfaces with dark charcoal text for real
+// readability, and a teal accent reserved for headers, labels, and active
+// states — not for body text/numbers, which need strong contrast to scan
+// quickly. Uses each platform's own default system font (San Francisco on
+// iOS, Roboto on Android) rather than a bundled one — no extra
+// dependencies, no font-version drift to manage.
 import { Platform } from "react-native";
 
 export const colors = {
-  bg: "#141416",
-  surface: "#1c1c1f",
-  surfaceRaised: "#26262a",
-  border: "rgba(255,255,255,0.12)",
-  borderStrong: "rgba(255,255,255,0.35)",
-  textPrimary: "#f2f2f3",
-  textSecondary: "#a9a9ad",
-  textMuted: "#75757a",
-  invertedBg: "#f2f2f3",
-  invertedText: "#141416",
-  error: "#f2f2f3", // errors stay monochrome too; weight/emphasis carries urgency
+  bg: "#f0f1f3",
+  surface: "#ffffff",
+  surfaceRaised: "#e7e9ec",
+  border: "rgba(20,20,22,0.09)",
+  borderStrong: "rgba(20,20,22,0.22)",
+  textPrimary: "#1a1a1e",
+  textSecondary: "#5c5c62",
+  textMuted: "#8a8a90",
+  accent: "#0f9b8e", // teal — headers, active tab, brand labels, section accents
+  invertedBg: "#0f9b8e", // active/selected pill fill (teal, not stark invert)
+  invertedText: "#ffffff",
+  error: "#c0392b",
 };
 
 export const font = undefined; // platform default: San Francisco (iOS) / Roboto (Android)

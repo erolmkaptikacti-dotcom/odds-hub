@@ -10,7 +10,7 @@ import type { GameOdds, GameProps, GamePropsResponse, PropCategory, PropLine } f
 
 const SOURCE_BRAND_COLOR = {
   polymarket: "#1652F0",
-  kalshi: "#00D298",
+  kalshi: "#00916e", // darkened from Kalshi's brand green for legibility as text on a light background
 };
 
 const CATEGORIES: { key: PropCategory; label: string }[] = [
@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
     fontFamily: fontMedium,
   },
   categoryTabTextActive: {
-    color: colors.textPrimary,
+    color: colors.accent,
     fontWeight: "700",
   },
   categoryUnderline: {
@@ -335,7 +335,7 @@ const styles = StyleSheet.create({
     height: 3,
     width: "100%",
     borderRadius: 2,
-    backgroundColor: colors.textPrimary,
+    backgroundColor: colors.accent,
   },
   body: {
     paddingHorizontal: 16,
@@ -470,10 +470,10 @@ const styles = StyleSheet.create({
     fontVariant: ["tabular-nums"],
   },
   oddsPillValueYes: {
-    color: "#3ddc85",
+    color: "#1e8e57", // darkened for contrast on light background
   },
   oddsPillValueNo: {
-    color: "#f0736b",
+    color: "#c0392b", // darkened for contrast on light background
   },
   ladderScroller: {
     marginLeft: 58, // align under the name, past the avatar

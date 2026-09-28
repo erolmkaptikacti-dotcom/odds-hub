@@ -26,7 +26,7 @@ function pct(v: number | null): string {
 // Each platform's own brand color, used for its column heading.
 const SOURCE_BRAND_COLOR = {
   polymarket: "#1652F0",
-  kalshi: "#00D298",
+  kalshi: "#00916e", // darkened from Kalshi's brand green for legibility as text on a light background
 };
 
 function TeamBadge({ name, align }: { name: string; align: "left" | "right" }) {

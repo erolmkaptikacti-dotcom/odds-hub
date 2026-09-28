@@ -22,7 +22,7 @@ export default function App() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="dark-content" />
 
       {selectedGame ? (
         <View style={styles.headerRow}>
@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
     paddingBottom: 4,
   },
   title: {
-    color: colors.textPrimary,
+    color: colors.accent,
     fontSize: 24,
     fontWeight: "700",
     fontFamily: fontMedium,
