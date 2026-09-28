@@ -1,18 +1,27 @@
-// Which league is selected only changes which league William Hill (via
-// The Odds API) fetches — Polymarket's tag_slug=soccer fetch already
-// returns every competition it lists (Premier League, Nations League,
-// MLS, etc. all came back in one call when we tested this live), so it
-// stays unfiltered regardless of league. The Odds API sport_keys below
-// follow their documented naming convention but, like Kalshi's series
-// tickers before them, are unverified against a real response for every
-// league except soccer_epl (which we've confirmed works) — an unverified
-// one simply returns no events and falls back to demo data like any
-// other source, so a wrong guess here degrades safely rather than
-// breaking anything.
+// Which league is selected changes which league William Hill (via The
+// Odds API) fetches — that's a real per-league API call, so it's
+// accurate for every league whose oddsApiKey is right. Polymarket is
+// different: its tag_slug=soccer fetch returns every competition in one
+// call, with no separate "league" field — the only thing distinguishing
+// leagues is each event's slug. We've only confirmed two slug prefixes
+// against real data: "unl-" for Nations League and "mls-" for MLS (both
+// seen directly in a live response). For every other league,
+// polymarketSlugPrefixes is left unset — filtering on a guessed prefix
+// would silently hide real games that just happen to be worded
+// differently, which is worse than not filtering at all, so those
+// leagues show Polymarket's full unfiltered soccer list instead.
+//
+// The Odds API sport_keys below follow their documented naming
+// convention but, like Kalshi's series tickers before them, are
+// unverified against a real response for every league except soccer_epl
+// (confirmed) — an unverified one simply returns no events and falls
+// back to demo data like any other source, so a wrong guess degrades
+// safely rather than breaking anything.
 export interface SoccerLeague {
   id: string;
   label: string;
   oddsApiKey: string;
+  polymarketSlugPrefixes?: string[];
 }
 
 export const SOCCER_LEAGUES: SoccerLeague[] = [
@@ -22,8 +31,8 @@ export const SOCCER_LEAGUES: SoccerLeague[] = [
   { id: "seriea", label: "Serie A", oddsApiKey: "soccer_italy_serie_a" },
   { id: "ligue1", label: "Ligue 1", oddsApiKey: "soccer_france_ligue_one" },
   { id: "ucl", label: "Champions League", oddsApiKey: "soccer_uefa_champs_league" },
-  { id: "mls", label: "MLS", oddsApiKey: "soccer_usa_mls" },
-  { id: "nations", label: "Nations League", oddsApiKey: "soccer_uefa_nations_league" },
+  { id: "mls", label: "MLS", oddsApiKey: "soccer_usa_mls", polymarketSlugPrefixes: ["mls-"] },
+  { id: "nations", label: "Nations League", oddsApiKey: "soccer_uefa_nations_league", polymarketSlugPrefixes: ["unl-"] },
 ];
 
 export const DEFAULT_LEAGUE_ID = "epl";

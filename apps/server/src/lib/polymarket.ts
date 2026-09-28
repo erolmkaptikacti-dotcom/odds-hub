@@ -5,6 +5,7 @@
 // probability).
 import type { GameProps, OddsEvent, OddsOutcome, PropCategory, PropLine } from "./types";
 import type { NflTeam } from "./nflTeams";
+import { leagueById } from "./soccerLeagues";
 
 const GAMMA_API = "https://gamma-api.polymarket.com";
 
@@ -160,12 +161,25 @@ async function fetchPolymarketRawEvents(tag: string): Promise<RawEvent[]> {
   return body;
 }
 
-export async function fetchPolymarketEvents(sport: string): Promise<OddsEvent[]> {
+export async function fetchPolymarketEvents(sport: string, leagueId: string | null = null): Promise<OddsEvent[]> {
   const tag = POLYMARKET_SPORT_TAGS[sport];
   if (!tag) return [];
 
   const body = await fetchPolymarketRawEvents(tag);
-  return body.map((e) => mapEvent(e, sport)).filter((e): e is OddsEvent => e !== null);
+  let filtered = body;
+
+  // Only apply a league filter when we have a confirmed slug prefix for
+  // it (see soccerLeagues.ts) — an unverified one would hide real games
+  // that are just worded differently, which is worse than showing
+  // everything.
+  if (sport === "soccer" && leagueId) {
+    const prefixes = leagueById(leagueId).polymarketSlugPrefixes;
+    if (prefixes) {
+      filtered = body.filter((e) => e.slug && prefixes.some((p) => e.slug!.startsWith(p)));
+    }
+  }
+
+  return filtered.map((e) => mapEvent(e, sport)).filter((e): e is OddsEvent => e !== null);
 }
 
 // Player-prop question patterns. The market's own question already names

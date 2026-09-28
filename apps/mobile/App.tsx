@@ -142,6 +142,11 @@ const styles = StyleSheet.create({
   },
   leagueRow: {
     flexDirection: "row",
+    // Horizontal ScrollView children stretch to fill the cross-axis
+    // (height) by default when nothing constrains it — that's what
+    // ballooned every bubble into a tall oval. alignItems: "flex-start"
+    // keeps each bubble sized to its own content instead.
+    alignItems: "flex-start",
     gap: 10,
     paddingHorizontal: 16,
     paddingBottom: 18, // room for the scrollbar riding along the bottom edge
