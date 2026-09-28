@@ -19,3 +19,17 @@ export const POLL_INTERVAL_MS = 30_000;
 // Everything else falls back to the per-source event list.
 export const GAME_MATCHING_SPORTS = new Set(["nfl"]);
 
+// Mirrors apps/server/src/lib/soccerLeagues.ts's ids — only the William
+// Hill side of the feed actually changes per league (Polymarket already
+// returns every competition under one "soccer" tag).
+export const SOCCER_LEAGUES = [
+  { id: "epl", label: "Premier League" },
+  { id: "laliga", label: "La Liga" },
+  { id: "bundesliga", label: "Bundesliga" },
+  { id: "seriea", label: "Serie A" },
+  { id: "ligue1", label: "Ligue 1" },
+  { id: "ucl", label: "Champions League" },
+  { id: "mls", label: "MLS" },
+  { id: "nations", label: "Nations League" },
+] as const;
+

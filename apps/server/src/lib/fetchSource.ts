@@ -7,18 +7,22 @@ import { isSupportedSport } from "./sports";
 
 export const ALL_SOURCES: Source[] = ["polymarket", "kalshi", "williamhill"];
 
-const FETCHERS: Record<Source, (sport: string) => Promise<OddsEvent[]>> = {
-  polymarket: fetchPolymarketEvents,
-  kalshi: fetchKalshiEvents,
-  williamhill: fetchWilliamHillEvents,
+const FETCHERS: Record<Source, (sport: string, league: string | null) => Promise<OddsEvent[]>> = {
+  polymarket: (sport) => fetchPolymarketEvents(sport),
+  kalshi: (sport) => fetchKalshiEvents(sport),
+  williamhill: (sport, league) => fetchWilliamHillEvents(sport, league),
 };
 
-/** Fetches live events for one source, falling back to tagged demo data on any failure. */
-export async function fetchSourceEvents(source: Source, sportParam: string | null): Promise<EventsResponse> {
+/** Fetches live events for one source, falling back to tagged demo data on any failure. `league` only matters to sources that have multiple (currently just William Hill/soccer). */
+export async function fetchSourceEvents(
+  source: Source,
+  sportParam: string | null,
+  league: string | null = null
+): Promise<EventsResponse> {
   const sport = sportParam && isSupportedSport(sportParam) ? sportParam : "nfl";
 
   try {
-    const events = await FETCHERS[source](sport);
+    const events = await FETCHERS[source](sport, league);
     if (events.length > 0) {
       return { events, demo: false, updatedAt: Date.now() };
     }

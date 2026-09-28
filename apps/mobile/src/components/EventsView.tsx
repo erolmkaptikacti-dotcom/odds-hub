@@ -7,11 +7,11 @@ import { sharedStyles } from "@/sharedStyles";
 import type { EventsResponse } from "@/types";
 
 /** One card per source per market — used for sports we haven't built game-matching for yet. */
-export function EventsView({ sport }: { sport: string }) {
-  const { data, error, loading, refreshing, refresh } = usePolledFetch<EventsResponse>(
-    `${API_BASE_URL}/api/events?sport=${sport}`,
-    POLL_INTERVAL_MS
-  );
+export function EventsView({ sport, league }: { sport: string; league?: string }) {
+  const url = league
+    ? `${API_BASE_URL}/api/events?sport=${sport}&league=${league}`
+    : `${API_BASE_URL}/api/events?sport=${sport}`;
+  const { data, error, loading, refreshing, refresh } = usePolledFetch<EventsResponse>(url, POLL_INTERVAL_MS);
 
   return (
     <>

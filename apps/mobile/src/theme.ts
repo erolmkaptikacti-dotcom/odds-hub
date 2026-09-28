@@ -7,7 +7,7 @@
 import { Platform } from "react-native";
 
 export const colors = {
-  bg: "#c9cbd0",
+  bg: "#404247",
   surface: "#ffffff",
   surfaceRaised: "#eef0f2",
   border: "rgba(20,20,22,0.12)",

@@ -10,15 +10,9 @@
 // this simply returns no events, same as any other misconfigured source,
 // and the caller falls back to demo data.
 import type { OddsEvent, OddsOutcome } from "./types";
+import { leagueById } from "./soccerLeagues";
 
 const ODDS_API_BASE = "https://api.the-odds-api.com/v4";
-
-// The Odds API's own sport keys. Soccer has many separate leagues (each
-// its own key) — starting with the Premier League; add more here as
-// wanted (e.g. "soccer_spain_la_liga", "soccer_uefa_champs_league").
-const ODDS_API_SPORT_KEYS: Record<string, string> = {
-  soccer: "soccer_epl",
-};
 
 // The Odds API's bookmaker key for William Hill.
 const BOOKMAKER_KEY = "williamhill";
@@ -73,10 +67,10 @@ function mapEvent(raw: RawEvent, sport: string): OddsEvent | null {
   };
 }
 
-export async function fetchWilliamHillEvents(sport: string): Promise<OddsEvent[]> {
+export async function fetchWilliamHillEvents(sport: string, leagueId: string | null): Promise<OddsEvent[]> {
   const apiKey = process.env.ODDS_API_KEY;
-  const sportKey = ODDS_API_SPORT_KEYS[sport];
-  if (!apiKey || !sportKey) return [];
+  if (!apiKey || sport !== "soccer") return [];
+  const sportKey = leagueById(leagueId).oddsApiKey;
 
   const url = `${ODDS_API_BASE}/sports/${sportKey}/odds/?apiKey=${apiKey}&regions=uk&markets=h2h&oddsFormat=decimal`;
   const res = await fetch(url, { headers: { accept: "application/json" }, next: { revalidate: 60 } });

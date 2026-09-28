@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Animated, Pressable, SafeAreaView, StatusBar, StyleSheet, Text, View } from "react-native";
-import { GAME_MATCHING_SPORTS, SPORTS } from "@/config";
+import { Animated, Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, View } from "react-native";
+import { GAME_MATCHING_SPORTS, SOCCER_LEAGUES, SPORTS } from "@/config";
 import { GamesView } from "@/components/GamesView";
 import { EventsView } from "@/components/EventsView";
 import { GameDetailScreen } from "@/components/GameDetailScreen";
+import { OutlineBubble } from "@/components/OutlineBubble";
 import { useSlideTransition } from "@/hooks/useSlideTransition";
 import { colors, fontMedium } from "@/theme";
 import type { GameOdds } from "@/types";
@@ -15,6 +16,7 @@ const SCREEN_ORDER = [...SPORTS.map((s) => `list:${s.key}`), "detail"];
 
 export default function App() {
   const [sport, setSport] = useState<string>(SPORTS[0].key);
+  const [league, setLeague] = useState<string>(SOCCER_LEAGUES[0].id);
   const [selectedGame, setSelectedGame] = useState<GameOdds | null>(null);
 
   const activeKey = selectedGame ? "detail" : `list:${sport}`;
@@ -49,6 +51,18 @@ export default function App() {
               </Pressable>
             ))}
           </View>
+
+          {sport === "soccer" && (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.leagueRow}
+            >
+              {SOCCER_LEAGUES.map((l) => (
+                <OutlineBubble key={l.id} label={l.label} active={league === l.id} onPress={() => setLeague(l.id)} />
+              ))}
+            </ScrollView>
+          )}
         </>
       )}
 
@@ -58,7 +72,7 @@ export default function App() {
         ) : GAME_MATCHING_SPORTS.has(sport) ? (
           <GamesView sport={sport} onSelectGame={setSelectedGame} />
         ) : (
-          <EventsView sport={sport} />
+          <EventsView sport={sport} league={sport === "soccer" ? league : undefined} />
         )}
       </Animated.View>
     </SafeAreaView>
@@ -119,5 +133,11 @@ const styles = StyleSheet.create({
   },
   sportChipTextActive: {
     color: colors.invertedText,
+  },
+  leagueRow: {
+    flexDirection: "row",
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingBottom: 14,
   },
 });

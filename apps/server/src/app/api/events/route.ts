@@ -20,9 +20,10 @@ const DEFAULT_SOURCES: Source[] = ["polymarket", "kalshi"];
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const sport = searchParams.get("sport");
+  const league = searchParams.get("league");
   const sources = SOURCES_BY_SPORT[sport ?? ""] ?? DEFAULT_SOURCES;
 
-  const results = await Promise.all(sources.map((source) => fetchSourceEvents(source, sport)));
+  const results = await Promise.all(sources.map((source) => fetchSourceEvents(source, sport, league)));
 
   const events = results.flatMap((r) => r.events).sort((a, b) => b.volume - a.volume);
   const reasons = results
