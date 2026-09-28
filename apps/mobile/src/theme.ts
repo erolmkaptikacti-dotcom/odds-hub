@@ -7,11 +7,11 @@
 import { Platform } from "react-native";
 
 export const colors = {
-  bg: "#f0f1f3",
+  bg: "#c9cbd0",
   surface: "#ffffff",
-  surfaceRaised: "#e7e9ec",
-  border: "rgba(20,20,22,0.09)",
-  borderStrong: "rgba(20,20,22,0.22)",
+  surfaceRaised: "#eef0f2",
+  border: "rgba(20,20,22,0.12)",
+  borderStrong: "rgba(20,20,22,0.28)",
   textPrimary: "#1a1a1e",
   textSecondary: "#5c5c62",
   textMuted: "#8a8a90",
