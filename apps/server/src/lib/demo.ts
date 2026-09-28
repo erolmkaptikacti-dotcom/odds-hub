@@ -20,7 +20,7 @@ const DEMO_MATCHUPS: Record<string, [string, string][]> = {
 const DEMO_SOURCE_URL: Record<Source, string> = {
   polymarket: "https://polymarket.com",
   kalshi: "https://kalshi.com",
-  bet365: "https://www.bet365.com",
+  williamhill: "https://www.williamhill.com",
 };
 
 export function generateDemoEvents(source: Source, sport: string): OddsEvent[] {

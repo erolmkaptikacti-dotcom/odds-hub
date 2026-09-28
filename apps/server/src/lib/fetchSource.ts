@@ -1,16 +1,16 @@
 import type { EventsResponse, OddsEvent, Source } from "./types";
 import { fetchPolymarketEvents } from "./polymarket";
 import { fetchKalshiEvents } from "./kalshi";
-import { fetchBet365Events } from "./oddsApi";
+import { fetchWilliamHillEvents } from "./oddsApi";
 import { generateDemoEvents } from "./demo";
 import { isSupportedSport } from "./sports";
 
-export const ALL_SOURCES: Source[] = ["polymarket", "kalshi", "bet365"];
+export const ALL_SOURCES: Source[] = ["polymarket", "kalshi", "williamhill"];
 
 const FETCHERS: Record<Source, (sport: string) => Promise<OddsEvent[]>> = {
   polymarket: fetchPolymarketEvents,
   kalshi: fetchKalshiEvents,
-  bet365: fetchBet365Events,
+  williamhill: fetchWilliamHillEvents,
 };
 
 /** Fetches live events for one source, falling back to tagged demo data on any failure. */

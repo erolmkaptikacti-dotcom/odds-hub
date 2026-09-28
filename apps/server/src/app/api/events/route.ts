@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { fetchSourceEvents, ALL_SOURCES } from "@/lib/fetchSource";
 import type { EventsResponse, Source } from "@/lib/types";
 
-// bet365 (via The Odds API) only has soccer wired up so far — keep it out
-// of every other sport's feed rather than showing an always-demo "bet365"
+// William Hill (via The Odds API) only has soccer wired up so far — keep it out
+// of every other sport's feed rather than showing an always-demo "William Hill"
 // entry there.
 const SOURCES_BY_SPORT: Partial<Record<string, Source[]>> = {
   soccer: ALL_SOURCES,

@@ -1,10 +1,10 @@
 import type { GameOdds, GameSourceOdds, OddsEvent } from "./types";
+import { findTeam, matchGameTeams, type NflTeam } from "./nflTeams";
 
 // buildGameOdds only ever merges the two sources GameOdds actually has
-// fields for — bet365 (soccer only, via The Odds API) doesn't have
+// fields for — William Hill (soccer only, via The Odds API) doesn't have
 // per-game moneyline matching wired up, only NFL does.
 type GameMatchedSource = "polymarket" | "kalshi";
-import { findTeam, matchGameTeams, type NflTeam } from "./nflTeams";
 
 function gameKey(a: NflTeam, b: NflTeam): string {
   return [a.abbr, b.abbr].sort().join("-");

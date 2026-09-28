@@ -5,7 +5,7 @@ import { colors, font, fontMedium } from "@/theme";
 const SOURCE_LABEL: Record<OddsEvent["source"], string> = {
   polymarket: "Polymarket",
   kalshi: "Kalshi",
-  bet365: "bet365",
+  williamhill: "William Hill",
 };
 
 function formatVolume(v: number): string {
