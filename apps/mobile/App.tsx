@@ -55,8 +55,11 @@ export default function App() {
           {sport === "soccer" && (
             <ScrollView
               horizontal
-              showsHorizontalScrollIndicator={false}
+              showsHorizontalScrollIndicator
+              persistentScrollbar
+              indicatorStyle="white"
               contentContainerStyle={styles.leagueRow}
+              style={styles.leagueScroller}
             >
               {SOCCER_LEAGUES.map((l) => (
                 <OutlineBubble key={l.id} label={l.label} active={league === l.id} onPress={() => setLeague(l.id)} />
@@ -134,10 +137,13 @@ const styles = StyleSheet.create({
   sportChipTextActive: {
     color: colors.invertedText,
   },
+  leagueScroller: {
+    marginBottom: 4,
+  },
   leagueRow: {
     flexDirection: "row",
-    gap: 8,
+    gap: 10,
     paddingHorizontal: 16,
-    paddingBottom: 14,
+    paddingBottom: 18, // room for the scrollbar riding along the bottom edge
   },
 });
