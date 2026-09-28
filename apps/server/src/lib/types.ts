@@ -2,7 +2,7 @@
 // ever talks to /api/events and only ever sees this shape — it never knows
 // Polymarket and Kalshi have completely different raw APIs.
 
-export type Source = "polymarket" | "kalshi";
+export type Source = "polymarket" | "kalshi" | "bet365";
 
 export interface OddsOutcome {
   name: string; // e.g. "Chiefs win", "Yes"

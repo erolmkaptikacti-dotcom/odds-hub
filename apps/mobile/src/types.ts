@@ -2,7 +2,7 @@
 // packages. If these drift, the fix is either to keep them in sync by hand
 // (fine at this size) or move them into a shared workspace package later.
 
-export type Source = "polymarket" | "kalshi";
+export type Source = "polymarket" | "kalshi" | "bet365";
 
 export interface OddsOutcome {
   name: string;

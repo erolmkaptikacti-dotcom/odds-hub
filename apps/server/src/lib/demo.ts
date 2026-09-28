@@ -17,6 +17,12 @@ const DEMO_MATCHUPS: Record<string, [string, string][]> = {
   soccer: [["Manchester City", "Real Madrid"]],
 };
 
+const DEMO_SOURCE_URL: Record<Source, string> = {
+  polymarket: "https://polymarket.com",
+  kalshi: "https://kalshi.com",
+  bet365: "https://www.bet365.com",
+};
+
 export function generateDemoEvents(source: Source, sport: string): OddsEvent[] {
   const matchups = DEMO_MATCHUPS[sport] ?? [];
   return matchups.map(([home, away], i) => {
@@ -32,7 +38,7 @@ export function generateDemoEvents(source: Source, sport: string): OddsEvent[] {
       ],
       volume: 12000 + i * 4300,
       closeTime: null,
-      sourceUrl: source === "polymarket" ? "https://polymarket.com" : "https://kalshi.com",
+      sourceUrl: DEMO_SOURCE_URL[source],
     };
   });
 }

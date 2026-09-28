@@ -1,4 +1,9 @@
-import type { GameOdds, GameSourceOdds, OddsEvent, Source } from "./types";
+import type { GameOdds, GameSourceOdds, OddsEvent } from "./types";
+
+// buildGameOdds only ever merges the two sources GameOdds actually has
+// fields for — bet365 (soccer only, via The Odds API) doesn't have
+// per-game moneyline matching wired up, only NFL does.
+type GameMatchedSource = "polymarket" | "kalshi";
 import { findTeam, matchGameTeams, type NflTeam } from "./nflTeams";
 
 function gameKey(a: NflTeam, b: NflTeam): string {
@@ -31,10 +36,10 @@ function sourceOdds(event: OddsEvent, teamA: NflTeam, teamB: NflTeam): GameSourc
  * real-world game, keyed by the two teams involved. A game appears once
  * even if only one source covers it (the other source's field is null).
  */
-export function buildGameOdds(eventsBySource: Partial<Record<Source, OddsEvent[]>>): GameOdds[] {
+export function buildGameOdds(eventsBySource: Partial<Record<GameMatchedSource, OddsEvent[]>>): GameOdds[] {
   const games = new Map<string, GameOdds>();
 
-  for (const [source, events] of Object.entries(eventsBySource) as [Source, OddsEvent[] | undefined][]) {
+  for (const [source, events] of Object.entries(eventsBySource) as [GameMatchedSource, OddsEvent[] | undefined][]) {
     if (!events) continue;
     for (const event of events) {
       const teams = matchGameTeams(event);
