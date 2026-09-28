@@ -168,12 +168,11 @@ export async function fetchPolymarketEvents(sport: string): Promise<OddsEvent[]>
   return body.map((e) => mapEvent(e, sport)).filter((e): e is OddsEvent => e !== null);
 }
 
-// Player-prop question patterns. Unlike the moneyline, we don't try to
-// parse out a player's name or team — the market's own question already
-// names the player (e.g. "Josh Allen Over 275.5 Passing Yards?"), and we
-// have no roster database to reliably say which of the two teams they're
-// on, so props are returned as one list for the game rather than split
-// per team.
+// Player-prop question patterns. The market's own question already names
+// the player (e.g. "Josh Allen Over 275.5 Passing Yards?") — we extract
+// just that name (for a Sleeper headshot lookup, see the props route) but
+// still don't know their team from Polymarket's text alone, so props stay
+// one list per category rather than split per team until that's wired up.
 const CATEGORY_PATTERNS: [PropCategory, RegExp][] = [
   [ "anytimeTd", /anytime touchdown|to score a touchdown/i ],
   [ "passing", /passing yards/i ],
@@ -181,6 +180,12 @@ const CATEGORY_PATTERNS: [PropCategory, RegExp][] = [
   [ "receiving", /receiv\w* yards/i ],
 ];
 const LINE_NUMBER_RE = /(\d+(?:\.\d+)?)/;
+
+function extractPlayerName(question: string): string {
+  const idx = question.search(/\b(over|under|anytime)\b/i);
+  const name = (idx === -1 ? question : question.slice(0, idx)).replace(/^will\s+/i, "").trim();
+  return name || question;
+}
 
 function extractPropLine(market: RawMarket, eventUrl: string, category: PropCategory): PropLine | null {
   const names = parseJsonArray(market.outcomes);
@@ -195,6 +200,7 @@ function extractPropLine(market: RawMarket, eventUrl: string, category: PropCate
 
   return {
     label: market.question ?? "Prop",
+    playerName: extractPlayerName(market.question ?? "Prop"),
     line: lineMatch ? Number(lineMatch[1]) : null,
     overProbability,
     sourceUrl: eventUrl,

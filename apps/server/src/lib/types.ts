@@ -63,9 +63,12 @@ export interface GamesResponse {
 // are listed for the game as a whole rather than split under teamA/teamB.
 export interface PropLine {
   label: string;
+  playerName: string;
   line: number | null;
   overProbability: number | null;
   sourceUrl: string;
+  headshotUrl?: string;
+  team?: string; // Sleeper's team abbreviation, e.g. "MIN" — set only when matched
 }
 
 export type PropCategory = "anytimeTd" | "passing" | "rushing" | "receiving";

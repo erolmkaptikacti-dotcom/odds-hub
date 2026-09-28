@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Animated, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Animated, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { API_BASE_URL } from "@/config";
 import { usePolledFetch } from "@/hooks/usePolledFetch";
 import { useSlideTransition } from "@/hooks/useSlideTransition";
@@ -36,18 +36,12 @@ function initials(name: string): string {
   return (words[0][0] + words[words.length - 1][0]).toUpperCase();
 }
 
-// The market question already names the player before "Over/Under N
-// yards?" (or just "Anytime Touchdown") — strip that part off so we can
-// show the player's name on its own, and group markets that share the
-// same extracted name into one card with a ladder of lines to pick from.
-function playerName(label: string): string {
-  const idx = label.search(/\b(over|under|anytime)\b/i);
-  const name = (idx === -1 ? label : label.slice(0, idx)).replace(/^will\s+/i, "").trim();
-  return name || label;
-}
-
+// Markets that share the same server-provided playerName (see
+// apps/server/src/lib/polymarket.ts's extractPlayerName) group into one
+// card with a ladder of lines to pick from.
 interface PlayerGroup {
   name: string;
+  headshotUrl?: string;
   lines: PropLine[];
 }
 
@@ -55,17 +49,36 @@ function groupByPlayer(props: PropLine[]): PlayerGroup[] {
   const order: string[] = [];
   const byName = new Map<string, PropLine[]>();
   for (const p of props) {
-    const name = playerName(p.label);
-    if (!byName.has(name)) {
-      byName.set(name, []);
-      order.push(name);
+    if (!byName.has(p.playerName)) {
+      byName.set(p.playerName, []);
+      order.push(p.playerName);
     }
-    byName.get(name)!.push(p);
+    byName.get(p.playerName)!.push(p);
   }
-  return order.map((name) => ({
-    name,
-    lines: [...byName.get(name)!].sort((a, b) => (a.line ?? 0) - (b.line ?? 0)),
-  }));
+  return order.map((name) => {
+    const lines = [...byName.get(name)!].sort((a, b) => (a.line ?? 0) - (b.line ?? 0));
+    return { name, headshotUrl: lines.find((l) => l.headshotUrl)?.headshotUrl, lines };
+  });
+}
+
+/** A real headshot when we have one (via Sleeper), falling back to colored initials otherwise — including if the image itself fails to load. */
+function PlayerAvatar({ name, headshotUrl }: { name: string; headshotUrl?: string }) {
+  const [errored, setErrored] = useState(false);
+  if (headshotUrl && !errored) {
+    return (
+      <Image
+        source={{ uri: headshotUrl }}
+        style={styles.avatar}
+        onError={() => setErrored(true)}
+        accessibilityLabel={name}
+      />
+    );
+  }
+  return (
+    <View style={[styles.avatar, { backgroundColor: hashColor(name) }]}>
+      <Text style={styles.avatarText}>{initials(name)}</Text>
+    </View>
+  );
 }
 
 function PlayerPropCard({ group }: { group: PlayerGroup }) {
@@ -74,14 +87,11 @@ function PlayerPropCard({ group }: { group: PlayerGroup }) {
   const active = group.lines[selected];
   const over = active.overProbability;
   const under = over === null ? null : 1 - over;
-  const avatarColor = hashColor(group.name);
 
   return (
     <View style={styles.playerCard}>
       <View style={styles.playerRow}>
-        <View style={[styles.avatar, { backgroundColor: avatarColor }]}>
-          <Text style={styles.avatarText}>{initials(group.name)}</Text>
-        </View>
+        <PlayerAvatar name={group.name} headshotUrl={group.headshotUrl} />
         <Text style={styles.playerName}>{group.name}</Text>
       </View>
 

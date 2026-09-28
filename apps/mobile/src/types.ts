@@ -52,9 +52,12 @@ export interface GamesResponse {
 
 export interface PropLine {
   label: string;
+  playerName: string;
   line: number | null;
   overProbability: number | null;
   sourceUrl: string;
+  headshotUrl?: string;
+  team?: string;
 }
 
 export type PropCategory = "anytimeTd" | "passing" | "rushing" | "receiving";

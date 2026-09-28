@@ -2,7 +2,23 @@ import { NextResponse } from "next/server";
 import { fetchPolymarketGameProps } from "@/lib/polymarket";
 import { teamByAbbr } from "@/lib/nflTeams";
 import { generateDemoProps } from "@/lib/demo";
-import type { GamePropsResponse } from "@/lib/types";
+import { findSleeperPlayer } from "@/lib/sleeper";
+import type { GameProps, GamePropsResponse, PropCategory } from "@/lib/types";
+
+/** Attaches a real headshot + team (via Sleeper) to each line whose player name matches, best-effort. */
+async function enrichWithSleeper(props: GameProps): Promise<GameProps> {
+  const enriched = { ...props };
+  for (const category of Object.keys(props) as PropCategory[]) {
+    enriched[category] = await Promise.all(
+      props[category].map(async (line) => {
+        const match = await findSleeperPlayer(line.playerName);
+        if (!match) return line;
+        return { ...line, headshotUrl: match.headshotUrl, team: match.team ?? undefined };
+      })
+    );
+  }
+  return enriched;
+}
 
 // Player props (QB passing yards, top receivers' receiving yards) for one
 // game, by source. `gameId` is the id buildGameOdds assigns:
@@ -33,7 +49,7 @@ export async function GET(request: Request) {
       demo = true;
       reason = "polymarket: no live prop markets found for this game";
     } else {
-      polymarket = props;
+      polymarket = await enrichWithSleeper(props);
     }
   } catch (err) {
     polymarket = generateDemoProps();
