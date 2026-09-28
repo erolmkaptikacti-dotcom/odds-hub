@@ -181,7 +181,16 @@ const CATEGORY_PATTERNS: [PropCategory, RegExp][] = [
 ];
 const LINE_NUMBER_RE = /(\d+(?:\.\d+)?)/;
 
+// Real Polymarket prop questions are "<Player Name>: <stat description>"
+// (e.g. "Caleb Williams: Passing Yards O/U 174.5", "Britain Covey: Anytime
+// Touchdown") — colon-separated, not phrased with the word "over"/"under"
+// the way I'd guessed before seeing live data. Fall back to the old
+// over/under/anytime-keyword split for any question that isn't
+// colon-shaped, in case a differently-worded market shows up.
 function extractPlayerName(question: string): string {
+  const colonIdx = question.indexOf(":");
+  if (colonIdx !== -1) return question.slice(0, colonIdx).trim() || question;
+
   const idx = question.search(/\b(over|under|anytime)\b/i);
   const name = (idx === -1 ? question : question.slice(0, idx)).replace(/^will\s+/i, "").trim();
   return name || question;
