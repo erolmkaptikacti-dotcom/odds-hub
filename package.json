@@ -6,6 +6,10 @@
   ],
   "scripts": {
     "server:dev": "npm run dev --workspace=apps/server",
-    "mobile:start": "npm run start --workspace=apps/mobile"
+    "mobile:start": "npm run start --workspace=apps/mobile",
+    "postinstall": "patch-package"
+  },
+  "devDependencies": {
+    "patch-package": "8.0.1"
   }
 }
